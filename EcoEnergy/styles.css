@@ -1,0 +1,607 @@
+/* --- Variables de Color y Reseteo --- */
+:root {
+    --main-bg: #f4f4fa;
+    --sidebar-bg: #132c5e;
+    --primary-color: #0E2148;
+    --secondary-color: #648DB3;
+    --text-light: #e9ebee;
+    --text-dark: #0E2148;
+    --card-bg: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--main-bg);
+    color: var(--text-dark);
+}
+
+/* --- Estructura Principal --- */
+.container {
+    position: relative;
+}
+
+/* --- Sidebar (Barra Lateral) --- */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 250px;
+    background-color: var(--sidebar-bg);
+    color: #fff;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 40px;
+    color: #ffffff;
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+}
+
+.nav .section {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.nav a {
+    text-decoration: none;
+    color: var(--text-light);
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: background 0.3s, color 0.3s;
+    font-weight: 500;
+}
+
+.nav a:hover {
+    background-color: var(--secondary-color);
+    color: #fff;
+}
+
+.nav a.active {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* --- Contenido Principal --- */
+.main {
+    margin-left: 250px;
+    padding: 40px;
+    width: calc(100% - 250px);
+}
+
+.main h2, .main h3 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.main p {
+    font-size: 16px;
+    margin-bottom: 12px;
+    max-width: 650px;
+    line-height: 1.6;
+}
+
+/* --- Slider de la Página de Inicio --- */
+.hero-slider {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    margin-bottom: 2rem;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.slide.active {
+    opacity: 1;
+}
+
+.slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.slide-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 2rem;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
+    color: #fff;
+}
+
+.slide-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: #fff;
+}
+
+.slide-content p {
+    font-size: 1.2rem;
+    font-weight: 300;
+}
+
+/* --- Sección de Datos Curiosos --- */
+.content-section {
+    margin-bottom: 2rem;
+}
+
+.facts-section {
+    margin-top: 2rem;
+}
+
+.facts-section h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--secondary-color);
+}
+
+.cards-grid {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.card {
+    background-color: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    flex-basis: calc(33% - 1.5rem);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card h4 {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+/* --- Estilos para la Página de Datos (Sin cambios) --- */
+.form-control {
+    border: 2px solid #dde2ec;
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-control:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 5px rgba(100, 141, 179, 0.5);
+    outline: none;
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #dde2ec;
+    border-radius: 8px;
+    background-color: var(--card-bg);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th, .table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #dde2ec;
+}
+
+.table thead th {
+    background-color: var(--sidebar-bg);
+    color: #ffffff;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85em;
+}
+
+.table tbody td {
+    color: #333;
+}
+
+.table tbody tr:hover {
+    background-color: #f0f3f7;
+}
+
+.table tbody tr:nth-of-type(even) {
+    background-color: #f8f9fc;
+}
+
+.table tbody tr:nth-of-type(even):hover {
+    background-color: #e9eef5;
+}
+
+.title{
+  text-align: center;
+}
+.parrafo {
+  height: auto;
+  text-align: center;
+  justify-content:center;
+  align-items: center;
+
+}
+
+/* --- Diseño Responsive --- */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        padding: 1rem;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+
+    .logo {
+        margin-bottom: 0;
+        font-size: 1.5rem;
+    }
+
+    .nav {
+        display: none;
+    }
+
+    .main {
+        margin-left: 0;
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .hero-slider {
+        height: 250px;
+    }
+
+    .slide-content {
+        padding: 1rem;
+    }
+
+    .slide-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .slide-content p {
+        font-size: 1rem;
+    }
+
+    .cards-grid {
+        flex-direction: column;
+    }
+
+    .card {
+        flex-basis: 100%;
+    }
+}
+
+/* --- Estilos para la página de Hidroeléctrica --- */
+
+/* Sección de Cabecera */
+.hero-section {
+    position: relative;
+    margin-bottom: 2rem;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.hero-image {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    filter: brightness(60%); /* Oscurece la imagen para que el texto resalte */
+}
+
+.hero-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    text-align: center;
+    width: 80%;
+    max-width: 700px;
+}
+
+.hero-text h2 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    color: #fff;
+}
+
+.hero-text p {
+    font-size: 1.2rem;
+    max-width: none; /* Elimina el límite de ancho para este párrafo */
+}
+
+/* Sección de Diagrama */
+.diagram-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.diagram-step {
+    background-color: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease;
+}
+
+.diagram-step:hover {
+    transform: translateY(-5px);
+}
+
+.step-number {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    background-color: var(--secondary-color);
+    color: #fff;
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.diagram-step h4 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+/* Sección de Ventajas y Desventajas */
+.card-advantage, .card-disadvantage {
+    flex: 1; /* Ocupa el mismo espacio que la otra tarjeta */
+}
+
+.card-advantage h4 {
+    color: #28a745; /* Color para las ventajas */
+}
+
+.card-disadvantage h4 {
+    color: #dc3545; /* Color para las desventajas */
+}
+
+.card-advantage ul, .card-disadvantage ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.card-advantage li::before {
+    content: '✅ ';
+}
+
+.card-disadvantage li::before {
+    content: '❌ ';
+}
+
+/* Sección de Tipos de Centrales */
+.types-grid {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+.type-card {
+    background-color: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    flex-basis: calc(33% - 1.5rem);
+    transition: transform 0.3s ease;
+}
+
+.type-card h4 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+/* Sección de Preguntas Frecuentes (Acordeón) */
+.accordion {
+    max-width: 800px;
+    margin: 2rem auto;
+}
+
+.accordion-item {
+    border: 1px solid #dde2ec;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.accordion-button {
+    background-color: var(--card-bg);
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 1.2rem 1.5rem;
+    width: 100%;
+    text-align: left;
+    border: none;
+    outline: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s;
+}
+
+.accordion-button::after {
+    content: '▼';
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.accordion-button.active::after {
+    transform: rotate(180deg);
+}
+
+.accordion-button:hover {
+    background-color: #f0f3f7;
+}
+
+.accordion-content {
+    padding: 0 1.5rem;
+    background-color: #f8f9fc;
+    display: none; /* Oculto por defecto, se muestra con JavaScript */
+    transition: max-height 0.3s ease-out, padding 0.3s;
+}
+
+.accordion-content p {
+    padding: 1rem 0;
+    margin: 0;
+}
+
+/* Responsive Design para la página de hidroeléctrica */
+@media (max-width: 768px) {
+    .hero-image {
+        height: 250px;
+    }
+    .hero-text h2 {
+        font-size: 2rem;
+    }
+    .hero-text p {
+        font-size: 1rem;
+    }
+    .diagram-grid {
+        grid-template-columns: 1fr;
+    }
+    .types-grid {
+        flex-direction: column;
+    }
+    .type-card {
+        flex-basis: 100%;
+    }
+}
+
+/* Estilos adicionales para la calculadora y el dashboard */
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #0c1a36;
+    border-color: #0c1a36;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+    color: #665008;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.chart-card {
+    background-color: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.chart-card h4 {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+/* Responsive para los gráficos */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Estilo para el contenedor de la tabla con scroll */
+.scrollable-table-container {
+    max-height: 500px; /* Puedes ajustar esta altura según tus necesidades */
+    overflow-y: auto;
+    border: 1px solid #dde2ec;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Opcional: Asegura que el encabezado de la tabla no se mueva con el scroll */
+.scrollable-table-container thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* --- Dashboard Filters --- */
+
+.dashboard-filters {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex-grow: 1;
+}
+
+/* Responsivo para los filtros */
+@media (max-width: 768px) {
+    .dashboard-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

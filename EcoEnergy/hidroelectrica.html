@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Energía Hidroeléctrica</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <h1 class="logo">💧 EcoEnergy</h1>
+            <nav class="nav">
+                <span class="section">NAVEGACIÓN</span>
+                <a href="index.html">Inicio</a>
+                <a href="hidroelectrica.html" class="active">Energía Hidroeléctrica</a>
+                <a href="datos.html">Cargar Datos</a>
+                <a href="calculadora.html">Calculadora</a>
+                <a href="dashboard.html">Dashboard Visual</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="hero-section">
+                <img src="https://via.placeholder.com/1200x400?text=Imagen+de+Central+Hidroelectrica" alt="Central hidroeléctrica" class="hero-image">
+                <div class="hero-text">
+                    <h2>Energía Hidroeléctrica: El Movimiento del Agua</h2>
+                    <p>
+                        La **energía hidroeléctrica** es una fuente de energía renovable y sostenible que aprovecha la fuerza del agua en movimiento. Aquí te explicamos su funcionamiento, tipos y el impacto que tiene en el mundo.
+                    </p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h3>💦 ¿Cómo Funciona una Central Hidroeléctrica?</h3>
+                <p>El proceso es una ingeniosa transformación de energía, paso a paso:</p>
+                <div class="diagram-grid">
+                    <div class="diagram-step">
+                        <span class="step-number">1</span>
+                        <h4>Represa y Embalse</h4>
+                        <p>El agua se almacena en un gran embalse para controlar el flujo y la presión.</p>
+                    </div>
+                    <div class="diagram-step">
+                        <span class="step-number">2</span>
+                        <h4>Entrada del Agua</h4>
+                        <p>El agua fluye a través de un conducto forzado hacia las turbinas.</p>
+                    </div>
+                    <div class="diagram-step">
+                        <span class="step-number">3</span>
+                        <h4>Turbinas y Generador</h4>
+                        <p>La fuerza del agua hace girar las turbinas, las cuales activan un generador que produce electricidad.</p>
+                    </div>
+                    <div class="diagram-step">
+                        <span class="step-number">4</span>
+                        <h4>Distribución</h4>
+                        <p>La electricidad viaja a través de la red de transmisión para abastecer a hogares y empresas.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+
+            <div class="content-section">
+                <h3>👍 Ventajas y 👎 Desventajas</h3>
+                <div class="cards-grid">
+                    <div class="card card-advantage">
+                        <h4>Ventajas</h4>
+                        <ul>
+                            <li>No produce emisiones contaminantes.</li>
+                            <li>Provee energía constante y controlada.</li>
+                            <li>Bajo costo de operación.</li>
+                            <li>Control de inundaciones.</li>
+                        </ul>
+                    </div>
+                    <div class="card card-disadvantage">
+                        <h4>Desventajas</h4>
+                        <ul>
+                            <li>Alto costo inicial de construcción.</li>
+                            <li>Impacto ambiental en ecosistemas.</li>
+                            <li>Dependencia del clima y caudal de agua.</li>
+                            <li>Posible desplazamiento de comunidades.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+
+            <div class="content-section">
+                <h3>Tipos de Centrales Hidroeléctricas</h3>
+                <div class="types-grid">
+                    <div class="type-card">
+                        <h4>Centrales de Embalse</h4>
+                        <p>Las más comunes. Usan una gran presa para almacenar agua en un lago artificial.</p>
+                    </div>
+                    <div class="type-card">
+                        <h4>Centrales de Pasada</h4>
+                        <p>Aprovechan el flujo natural de un río sin necesidad de crear un gran embalse.</p>
+                    </div>
+                    <div class="type-card">
+                        <h4>Centrales de Bombeo</h4>
+                        <p>Funcionan como una "batería" gigante, bombeando agua a un reservorio superior usando energía sobrante.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h3>Preguntas Frecuentes</h3>
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <button class="accordion-button">¿Es la energía hidroeléctrica verdaderamente renovable?</button>
+                        <div class="accordion-content">
+                            <p>Sí, se considera renovable porque utiliza el ciclo del agua, un recurso natural que se regenera constantemente. Aunque la construcción de la presa tiene un impacto inicial, el recurso hídrico no se consume.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="accordion-button">¿Cuál es la mayor central hidroeléctrica del mundo?</button>
+                        <div class="accordion-content">
+                            <p>La mayor central del mundo es la **Presa de las Tres Gargantas** en China, con una capacidad de 22,500 MW.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="accordion-button">¿Cómo afecta la sequía a estas centrales?</button>
+                        <div class="accordion-content">
+                            <p>Las sequías prolongadas reducen el caudal de los ríos y el nivel de los embalses, lo que disminuye la capacidad de generación de energía. Esta es una de las principales desventajas de este tipo de energía.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.querySelectorAll('.accordion-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+
+                button.classList.toggle('active');
+
+                if (button.classList.contains('active')) {
+                    content.style.display = 'block';
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

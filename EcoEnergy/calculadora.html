@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Calculadora - EcoEnergy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar">
+        <h1 class="logo">💧 EcoEnergy</h1>
+        <nav class="nav">
+            <span class="section">NAVEGACIÓN</span>
+            <a href="index.html">Inicio</a>
+            <a href="hidroelectrica.html">Energía Hidroeléctrica</a>
+            <a href="datos.html">Cargar Datos</a>
+            <a href="calculadora.html" class="active">Calculadora</a>
+            <a href="dashboard.html">Dashboard Visual</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <h3>Calculadora de Consumo de Energía Renovable</h3>
+        <p>Estime el porcentaje de energía renovable en su consumo eléctrico total.</p>
+
+        <div id="loadingMessage" class="alert alert-info">
+            Cargando datos. Por favor, espere...
+        </div>
+        <div id="noDataMessage" class="alert alert-warning d-none">
+            <p><strong>Atención:</strong> No se han encontrado datos. Por favor, <a href="datos.html">cargue un archivo CSV</a> primero.</p>
+        </div>
+
+        <form id="calculationForm" class="d-none">
+            <div class="mb-3">
+                <label for="userConsumption" class="form-label">Consumo Eléctrico Anual (kWh):</label>
+                <input type="number" id="userConsumption" class="form-control" required min="1">
+            </div>
+            <div class="mb-3">
+                <label for="countrySelect" class="form-label">Seleccione una entidad/país:</label>
+                <select id="countrySelect" class="form-control" required></select>
+            </div>
+            <div class="mb-3">
+                <label for="yearSelect" class="form-label">Seleccione un año:</label>
+                <select id="yearSelect" class="form-control" required></select>
+            </div>
+            <button type="submit" class="btn btn-primary">Calcular</button>
+        </form>
+
+        <div id="resultContainer" class="mt-4 p-4 rounded d-none" style="background-color: #e9ecef;">
+            <h4>Resultados</h4>
+            <div id="calculationResult"></div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const storedData = localStorage.getItem('renewableData');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const noDataMessage = document.getElementById('noDataMessage');
+        const form = document.getElementById('calculationForm');
+
+        if (storedData) {
+            loadingMessage.classList.add('d-none');
+            form.classList.remove('d-none');
+            const rawData = JSON.parse(storedData);
+            populateDropdowns(rawData);
+        } else {
+            loadingMessage.classList.add('d-none');
+            noDataMessage.classList.remove('d-none');
+        }
+    });
+
+    function populateDropdowns(data) {
+        const countrySelect = document.getElementById('countrySelect');
+        const yearSelect = document.getElementById('yearSelect');
+        countrySelect.innerHTML = '';
+        yearSelect.innerHTML = '';
+
+        const countries = [...new Set(data.map(row => row['Entity']))].sort();
+        countries.forEach(country => {
+            const option = document.createElement('option');
+            option.value = country;
+            option.textContent = country;
+            countrySelect.appendChild(option);
+        });
+
+        const years = [...new Set(data.map(row => row['Year']))].sort((a, b) => b - a);
+        years.forEach(year => {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelect.appendChild(option);
+        });
+    }
+
+    document.getElementById('calculationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const storedData = localStorage.getItem('renewableData');
+        if (!storedData) {
+            alert('No hay datos cargados. Por favor, vuelva a la página de "Cargar Datos".');
+            return;
+        }
+
+        const rawData = JSON.parse(storedData);
+        const userConsumption = parseFloat(document.getElementById('userConsumption').value);
+        const selectedCountry = document.getElementById('countrySelect').value;
+        const selectedYear = document.getElementById('yearSelect').value;
+
+        const row = rawData.find(d => d['Entity'] === selectedCountry && d['Year'] === selectedYear);
+
+        if (!row || !row['Renewables (% equivalent primary energy)']) {
+            document.getElementById('calculationResult').innerHTML = '<p>No se encontraron datos de porcentaje renovable para la selección. Intente con otro país o año.</p>';
+            document.getElementById('resultContainer').classList.remove('d-none');
+            return;
+        }
+
+        const renewablePercentage = parseFloat(row['Renewables (% equivalent primary energy)']);
+        const renewableConsumption = userConsumption * (renewablePercentage / 100);
+        
+        document.getElementById('calculationResult').innerHTML = `
+            <p>Con base en un **${renewablePercentage.toFixed(2)}%** de energía renovable en **${selectedCountry}** durante **${selectedYear}**:</p>
+            <ul>
+                <li>Su consumo estimado de energía renovable sería de <strong>${renewableConsumption.toFixed(2)} kWh</strong> al año.</li>
+                <li>Esto representa el <strong>${renewablePercentage.toFixed(2)}%</strong> de su consumo total.</li>
+            </ul>
+        `;
+        document.getElementById('resultContainer').classList.remove('d-none');
+    });
+</script>
+
+</body>
+</html>

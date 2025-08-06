@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Visualizar Datos - EcoEnergy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar">
+        <h1 class="logo">💧 EcoEnergy</h1>
+        <nav class="nav">
+            <span class="section">NAVEGACIÓN</span>
+            <a href="index.html">Inicio</a>
+            <a href="hidroelectrica.html">Energía Hidroeléctrica</a>
+            <a href="datos.html" class="active">Visualizar Datos</a>
+            <a href="calculadora.html">Calculadora</a>
+            <a href="dashboard.html">Dashboard Visual</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <h3>Visualización de Datos del Proyecto</h3>
+        
+        <div id="noDataMessage" class="alert alert-warning d-none">
+            <p><strong>Atención:</strong> Por favor, cargue los archivos CSV para comenzar.</p>
+            <div class="mb-3">
+                <label for="consumptionFile" class="form-label">Cargar **hydropower-consumption.csv**</label>
+                <input type="file" id="consumptionFile" class="form-control" accept=".csv">
+            </div>
+            <div class="mb-3">
+                <label for="shareFile" class="form-label">Cargar **06 hydro-share-energy.csv**</label>
+                <input type="file" id="shareFile" class="form-control" accept=".csv">
+            </div>
+            <button id="loadFilesButton" class="btn btn-primary">Cargar y Guardar Datos</button>
+        </div>
+
+        <div id="data-view" class="d-none">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="datasetSelect" class="form-label">Seleccionar conjunto de datos:</label>
+                    <select id="datasetSelect" class="form-control">
+                        <option value="consumo">Consumo de Energía Hidroeléctrica</option>
+                        <option value="participacion">Participación de Energía Hidroeléctrica</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="countryFilter" class="form-label">Filtrar por País:</label>
+                    <select id="countryFilter" class="form-control"></select>
+                </div>
+                <div class="col-md-4">
+                    <label for="yearFilter" class="form-label">Filtrar por Año:</label>
+                    <select id="yearFilter" class="form-control"></select>
+                </div>
+            </div>
+
+            <div id="dataSummary" class="alert alert-info" role="alert"></div>
+
+            <div class="scrollable-table-container">
+                <table id="dataTable" class="table table-striped table-bordered">
+                    <thead>
+                        <tr></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button id="changeFilesButton" class="btn btn-secondary mt-3">Cambiar archivos</button>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script>
+    let allData = {};
+    let currentDataKey = 'consumo';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem('consumo') && localStorage.getItem('participacion')) {
+            loadDataFromLocalStorage();
+            showDataView();
+            renderTable(allData[currentDataKey]);
+        } else {
+            showNoDataMessage();
+        }
+    });
+
+    document.getElementById('loadFilesButton').addEventListener('click', () => {
+        const consumptionFile = document.getElementById('consumptionFile').files[0];
+        const shareFile = document.getElementById('shareFile').files[0];
+        
+        if (!consumptionFile || !shareFile) {
+            alert("Por favor, seleccione ambos archivos CSV.");
+            return;
+        }
+
+        Promise.all([
+            parseFile(consumptionFile, 'consumo'),
+            parseFile(shareFile, 'participacion')
+        ]).then(() => {
+            if (allData['consumo'] && allData['participacion']) {
+                showDataView();
+                renderTable(allData[currentDataKey]);
+            } else {
+                alert("Ocurrió un error al cargar uno o ambos archivos.");
+                showNoDataMessage();
+            }
+        });
+    });
+
+    document.getElementById('changeFilesButton').addEventListener('click', () => {
+        localStorage.removeItem('consumo');
+        localStorage.removeItem('participacion');
+        window.location.reload();
+    });
+
+    function parseFile(file, key) {
+        return new Promise(resolve => {
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    if (results.data) {
+                        allData[key] = results.data;
+                        localStorage.setItem(key, JSON.stringify(results.data));
+                    }
+                    resolve();
+                }
+            });
+        });
+    }
+
+    function loadDataFromLocalStorage() {
+        try {
+            allData['consumo'] = JSON.parse(localStorage.getItem('consumo'));
+            allData['participacion'] = JSON.parse(localStorage.getItem('participacion'));
+        } catch (e) {
+            console.error("Error al cargar datos desde localStorage", e);
+        }
+    }
+
+    function showDataView() {
+        document.getElementById('noDataMessage').classList.add('d-none');
+        document.getElementById('data-view').classList.remove('d-none');
+    }
+
+    function showNoDataMessage() {
+        document.getElementById('noDataMessage').classList.remove('d-none');
+        document.getElementById('data-view').classList.add('d-none');
+    }
+
+    document.getElementById('datasetSelect').addEventListener('change', (e) => {
+        currentDataKey = e.target.value;
+        const data = allData[currentDataKey];
+        renderTable(data);
+    });
+
+    document.getElementById('countryFilter').addEventListener('change', filterTable);
+    document.getElementById('yearFilter').addEventListener('change', filterTable);
+
+    function renderTable(data) {
+        if (!data || data.length === 0) {
+            return;
+        }
+
+        const theadRow = document.querySelector('#dataTable thead tr');
+        const tbody = document.querySelector('#dataTable tbody');
+        theadRow.innerHTML = '';
+        tbody.innerHTML = '';
+        
+        const headers = Object.keys(data[0]);
+        theadRow.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
+
+        const dataSummary = document.getElementById('dataSummary');
+        const fileName = (currentDataKey === 'consumo') ? 'hydropower-consumption.csv' : '06 hydro-share-energy.csv';
+        dataSummary.innerHTML = `<strong>Datos cargados:</strong> ${data.length} filas en el archivo "${fileName}".`;
+        
+        populateFilters(data);
+
+        data.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = headers.map(h => `<td>${row[h] || 'N/A'}</td>`).join('');
+            tbody.appendChild(tr);
+        });
+    }
+
+    function populateFilters(data) {
+        const countryFilter = document.getElementById('countryFilter');
+        const yearFilter = document.getElementById('yearFilter');
+        
+        const countries = ['Todos', ...new Set(data.map(row => row['Entity']))].sort();
+        const years = ['Todos', ...new Set(data.map(row => row['Year']))].sort((a, b) => b - a);
+
+        countryFilter.innerHTML = countries.map(c => `<option value="${c}">${c}</option>`).join('');
+        yearFilter.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    }
+
+    function filterTable() {
+        const data = allData[currentDataKey];
+        const country = document.getElementById('countryFilter').value;
+        const year = document.getElementById('yearFilter').value;
+
+        let filteredData = data;
+
+        if (country !== 'Todos') {
+            filteredData = filteredData.filter(row => row['Entity'] === country);
+        }
+
+        if (year !== 'Todos') {
+            filteredData = filteredData.filter(row => row['Year'] === year);
+        }
+
+        const tbody = document.querySelector('#dataTable tbody');
+        tbody.innerHTML = '';
+
+        if (filteredData.length > 0) {
+            const headers = Object.keys(filteredData[0]);
+            filteredData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = headers.map(h => `<td>${row[h] || 'N/A'}</td>`).join('');
+                tbody.appendChild(tr);
+            });
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Dashboard Visual - EcoEnergy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar">
+        <h1 class="logo">💧 EcoEnergy</h1>
+        <nav class="nav">
+            <span class="section">NAVEGACIÓN</span>
+            <a href="index.html">Inicio</a>
+            <a href="hidroelectrica.html">Energía Hidroeléctrica</a>
+            <a href="datos.html">Visualizar Datos</a>
+            <a href="calculadora.html">Calculadora</a>
+            <a href="dashboard.html" class="active">Dashboard Visual</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <h3>Dashboard de Energía Hidroeléctrica</h3>
+        <p>Análisis de la producción y la participación de la energía hidroeléctrica a nivel global.</p>
+        
+        <div id="noDataMessage" class="alert alert-warning d-none">
+            <p><strong>Atención:</strong> No se han encontrado datos. Por favor, <a href="datos.html">cargue los archivos CSV</a> primero.</p>
+        </div>
+
+        <div id="dashboard-content" class="d-none">
+            <div class="dashboard-filters">
+                <div class="filter-group">
+                    <label for="countryFilter" class="form-label">Filtrar por País:</label>
+                    <select id="countryFilter" class="form-control"></select>
+                </div>
+                <div class="filter-group">
+                    <label for="yearFilter" class="form-label">Filtrar por Año:</label>
+                    <select id="yearFilter" class="form-control"></select>
+                </div>
+            </div>
+            
+            <div id="chartInfoMessage" class="alert alert-info d-none">
+                No hay datos disponibles para la combinación de país y año seleccionada.
+            </div>
+
+            <div class="dashboard-grid full-width">
+                <div class="chart-card large-chart-card">
+                    <h4>Evolución del Consumo y la Participación Hidroeléctrica</h4>
+                    <canvas id="productionEvolutionChart"></canvas>
+                </div>
+            </div>
+            
+            <hr class="my-5">
+            
+            <div class="dashboard-grid">
+                <div class="chart-card">
+                    <h4>Consumo vs. Participación en el Año Seleccionado</h4>
+                    <canvas id="consumptionAndShareChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h4>Distribución de la Participación Energética</h4>
+                    <canvas id="hydroSharePieChart"></canvas>
+                </div>
+            </div>
+            
+            <hr class="my-5">
+            
+            <div class="dashboard-grid full-width">
+                <div class="chart-card large-chart-card">
+                    <h4>Consumo Hidroeléctrico vs. Promedio Mundial</h4>
+                    <canvas id="evolutionComparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let hydroConsumptionData = [];
+    let hydroShareData = [];
+    let consumptionHeader = '';
+    let shareHeader = '';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const hydroConsumption = localStorage.getItem('consumo');
+        const hydroShare = localStorage.getItem('participacion');
+
+        if (hydroConsumption && hydroShare) {
+            hydroConsumptionData = JSON.parse(hydroConsumption);
+            hydroShareData = JSON.parse(hydroShare);
+            
+            if (hydroConsumptionData.length > 0) {
+                const headers = Object.keys(hydroConsumptionData[0]);
+                consumptionHeader = headers.find(h => h.includes('Electricity from hydro'));
+            }
+            if (hydroShareData.length > 0) {
+                const headers = Object.keys(hydroShareData[0]);
+                shareHeader = headers.find(h => h.includes('Hydro (% equivalent primary energy)'));
+            }
+            
+            if (!consumptionHeader || !shareHeader) {
+                alert('Error: Los encabezados de los archivos CSV no coinciden con los esperados.');
+                return;
+            }
+
+            document.getElementById('noDataMessage').classList.add('d-none');
+            document.getElementById('dashboard-content').classList.remove('d-none');
+
+            populateFilters();
+            renderCharts();
+        } else {
+            document.getElementById('noDataMessage').classList.remove('d-none');
+        }
+    });
+
+    function populateFilters() {
+        const countryFilter = document.getElementById('countryFilter');
+        const yearFilter = document.getElementById('yearFilter');
+        
+        const countries = [...new Set(hydroConsumptionData.map(row => row['Entity']))].sort();
+        const years = [...new Set(hydroConsumptionData.map(row => row['Year']))].sort((a, b) => b - a);
+        
+        countryFilter.innerHTML = countries.map(c => `<option value="${c}">${c}</option>`).join('');
+        yearFilter.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+
+        countryFilter.addEventListener('change', renderCharts);
+        yearFilter.addEventListener('change', renderCharts);
+    }
+    
+    function renderCharts() {
+        const selectedCountry = document.getElementById('countryFilter').value;
+        const selectedYear = document.getElementById('yearFilter').value;
+        const chartInfoMessage = document.getElementById('chartInfoMessage');
+
+        if (window.charts) {
+            Object.values(window.charts).forEach(chart => chart.destroy());
+        }
+        window.charts = {};
+
+        const consumoData = hydroConsumptionData.find(d => d.Entity === selectedCountry && d.Year === selectedYear);
+        const shareData = hydroShareData.find(d => d.Entity === selectedCountry && d.Year === selectedYear);
+
+        const hasCurrentYearData = consumoData && shareData && consumoData[consumptionHeader] && shareData[shareHeader];
+
+        if (!hasCurrentYearData) {
+            chartInfoMessage.textContent = `No hay datos para la combinación de país "${selectedCountry}" y año "${selectedYear}".`;
+            chartInfoMessage.classList.remove('d-none');
+        } else {
+            chartInfoMessage.classList.add('d-none');
+            renderConsumptionAndShareChart(consumoData, shareData, selectedCountry, selectedYear);
+            renderHydroSharePieChart(shareData, selectedCountry, selectedYear);
+        }
+
+        renderProductionEvolutionChart(selectedCountry);
+        renderEvolutionComparisonChart(selectedCountry);
+    }
+    
+    // Gráfico de Evolución de la Producción y Participación
+    function renderProductionEvolutionChart(selectedCountry) {
+        const countryConsumption = hydroConsumptionData.filter(d => d.Entity === selectedCountry && d[consumptionHeader]);
+        const countryShare = hydroShareData.filter(d => d.Entity === selectedCountry && d[shareHeader]);
+        
+        const years = [...new Set([...countryConsumption.map(d => d.Year), ...countryShare.map(d => d.Year)])].sort();
+
+        const consumptionValues = years.map(year => {
+            const data = countryConsumption.find(d => d.Year === year);
+            return data ? parseFloat(data[consumptionHeader]) || null : null;
+        });
+
+        const shareValues = years.map(year => {
+            const data = countryShare.find(d => d.Year === year);
+            return data ? parseFloat(data[shareHeader]) || null : null;
+        });
+
+        window.charts.chart4 = new Chart(document.getElementById('productionEvolutionChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [
+                    {
+                        label: `Consumo Hidroeléctrico (TWh)`,
+                        data: consumptionValues,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        yAxisID: 'y1',
+                        tension: 0.4,
+                        spanGaps: true
+                    },
+                    {
+                        label: `Participación (%)`,
+                        data: shareValues,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        yAxisID: 'y2',
+                        tension: 0.4,
+                        spanGaps: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Consumo (TWh)' }
+                    },
+                    y2: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Participación (%)' },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+    }
+
+    // Gráfico 1: Consumo y Participación Hidroeléctrica
+    function renderConsumptionAndShareChart(consumoData, shareData, selectedCountry, selectedYear) {
+        const consumoValor = parseFloat(consumoData[consumptionHeader]) || 0;
+        const shareValor = parseFloat(shareData[shareHeader]) || 0;
+        
+        window.charts.chart1 = new Chart(document.getElementById('consumptionAndShareChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Consumo (TWh)', 'Participación (%)'],
+                datasets: [{
+                    label: `Datos para ${selectedCountry} en ${selectedYear}`,
+                    data: [consumoValor, shareValor],
+                    backgroundColor: ['rgba(54, 162, 235, 0.7)', 'rgba(75, 192, 192, 0.7)'],
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+    
+    // Gráfico 2: Participación Hidroeléctrica vs. Otras Fuentes
+    function renderHydroSharePieChart(shareData, selectedCountry, selectedYear) {
+        const shareValor = parseFloat(shareData[shareHeader]) || 0;
+        const otherEnergy = Math.max(0, 100 - shareValor);
+        
+        window.charts.chart2 = new Chart(document.getElementById('hydroSharePieChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: ['Hidroeléctrica', 'Otras Fuentes'],
+                datasets: [{
+                    data: [shareValor, otherEnergy],
+                    backgroundColor: ['rgba(54, 162, 235, 0.7)', 'rgba(201, 203, 207, 0.7)'],
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                return `${label}: ${value.toFixed(2)}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Gráfico 3: Evolución del Consumo Hidroeléctrico vs. Promedio Mundial
+    function renderEvolutionComparisonChart(selectedCountry) {
+        const worldData = hydroConsumptionData.filter(d => d.Entity === 'World' && d[consumptionHeader]);
+        const worldYears = worldData.map(d => d.Year);
+        const worldValues = worldData.map(d => parseFloat(d[consumptionHeader]) || 0);
+        
+        const countryDataConsumoAllYears = hydroConsumptionData.filter(d => d.Entity === selectedCountry);
+        const countryValues = worldYears.map(year => {
+            const row = countryDataConsumoAllYears.find(d => d.Year === year);
+            return row ? parseFloat(row[consumptionHeader]) || null : null;
+        });
+
+        window.charts.chart3 = new Chart(document.getElementById('evolutionComparisonChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: worldYears,
+                datasets: [
+                    {
+                        label: `${selectedCountry} (TWh)`,
+                        data: countryValues,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        fill: false,
+                        spanGaps: true,
+                    },
+                    {
+                        label: 'Mundial (TWh)',
+                        data: worldValues,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        fill: false,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Consumo (TWh)' }
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
