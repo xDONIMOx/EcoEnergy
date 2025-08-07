@@ -24,208 +24,386 @@
     </aside>
 
     <main class="main">
-        <h3>Visualización de Datos del Proyecto</h3>
+        <h3>Cargar Datos CSV</h3>
+        <p>Carga el archivo CSV con la participación de energías renovables para analizar los datos.</p>
         
-        <div id="noDataMessage" class="alert alert-warning d-none">
-            <p><strong>Atención:</strong> Por favor, cargue los archivos CSV para comenzar.</p>
+        <div class="card p-4">
             <div class="mb-3">
-                <label for="consumptionFile" class="form-label">Cargar **hydropower-consumption.csv**</label>
-                <input type="file" id="consumptionFile" class="form-control" accept=".csv">
+                <label for="fileInput" class="form-label">Archivo de Participación de Energías Renovables:</label>
+                <input class="form-control" type="file" id="fileInput" accept=".csv">
             </div>
-            <div class="mb-3">
-                <label for="shareFile" class="form-label">Cargar **06 hydro-share-energy.csv**</label>
-                <input type="file" id="shareFile" class="form-control" accept=".csv">
-            </div>
-            <button id="loadFilesButton" class="btn btn-primary">Cargar y Guardar Datos</button>
+            <button id="loadButton" class="btn btn-primary">Cargar y Guardar Datos</button>
         </div>
 
-        <div id="data-view" class="d-none">
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <label for="datasetSelect" class="form-label">Seleccionar conjunto de datos:</label>
-                    <select id="datasetSelect" class="form-control">
-                        <option value="consumo">Consumo de Energía Hidroeléctrica</option>
-                        <option value="participacion">Participación de Energía Hidroeléctrica</option>
-                    </select>
+        <div id="status" class="mt-3"></div>
+
+        <div id="visualizations-container" class="mt-5 d-none">
+            
+            <div class="dashboard-grid full-width mb-5">
+                <div class="chart-card large-chart-card">
+                    <h4>Métrica Global: Participación de Renovables por País y Año</h4>
+                    <p class="text-muted">El color indica el porcentaje de participación (más oscuro = mayor %)</p>
+                    <div id="heatmap-container" class="heatmap-box">
+                        </div>
                 </div>
-                <div class="col-md-4">
+            </div>
+
+            <hr class="my-5">
+
+            <div class="dashboard-filters">
+                <div class="filter-group">
                     <label for="countryFilter" class="form-label">Filtrar por País:</label>
                     <select id="countryFilter" class="form-control"></select>
                 </div>
-                <div class="col-md-4">
+                <div class="filter-group">
                     <label for="yearFilter" class="form-label">Filtrar por Año:</label>
                     <select id="yearFilter" class="form-control"></select>
                 </div>
             </div>
-
-            <div id="dataSummary" class="alert alert-info" role="alert"></div>
-
-            <div class="scrollable-table-container">
-                <table id="dataTable" class="table table-striped table-bordered">
-                    <thead>
-                        <tr></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            
+            <div id="chartInfoMessage" class="alert alert-info d-none">
+                No hay datos disponibles para la combinación de país y año seleccionada.
             </div>
-            <button id="changeFilesButton" class="btn btn-secondary mt-3">Cambiar archivos</button>
+
+            <div class="dashboard-grid full-width">
+                <div class="chart-card large-chart-card">
+                    <h4>Evolución de la Participación de Energías Renovables</h4>
+                    <canvas id="evolutionChart"></canvas>
+                </div>
+            </div>
+            
+            <hr class="my-5">
+            
+            <div class="dashboard-grid">
+                <div class="chart-card">
+                    <h4>Comparación de la Participación Renovable (Año Seleccionado)</h4>
+                    <canvas id="shareBarChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h4>Distribución de la Participación Energética</h4>
+                    <canvas id="sharePieChart"></canvas>
+                </div>
+            </div>
         </div>
     </main>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    let allData = {};
-    let currentDataKey = 'consumo';
+    let renewableData = [];
+    let shareHeader = '';
+    const localStorageKey = 'renovable';
 
     document.addEventListener('DOMContentLoaded', () => {
-        if (localStorage.getItem('consumo') && localStorage.getItem('participacion')) {
-            loadDataFromLocalStorage();
-            showDataView();
-            renderTable(allData[currentDataKey]);
-        } else {
-            showNoDataMessage();
-        }
-    });
-
-    document.getElementById('loadFilesButton').addEventListener('click', () => {
-        const consumptionFile = document.getElementById('consumptionFile').files[0];
-        const shareFile = document.getElementById('shareFile').files[0];
-        
-        if (!consumptionFile || !shareFile) {
-            alert("Por favor, seleccione ambos archivos CSV.");
-            return;
-        }
-
-        Promise.all([
-            parseFile(consumptionFile, 'consumo'),
-            parseFile(shareFile, 'participacion')
-        ]).then(() => {
-            if (allData['consumo'] && allData['participacion']) {
-                showDataView();
-                renderTable(allData[currentDataKey]);
-            } else {
-                alert("Ocurrió un error al cargar uno o ambos archivos.");
-                showNoDataMessage();
+        const renewableShare = localStorage.getItem(localStorageKey);
+        if (renewableShare) {
+            try {
+                renewableData = JSON.parse(renewableShare);
+                if (renewableData.length > 0) {
+                    const headers = Object.keys(renewableData[0]);
+                    shareHeader = headers.find(h => h.includes('Renewables (% equivalent primary energy)'));
+                    if (shareHeader) {
+                        document.getElementById('visualizations-container').classList.remove('d-none');
+                        renderGlobalHeatmap();
+                        populateFilters();
+                    }
+                }
+            } catch (e) {
+                console.error("Error al parsear los datos de localStorage:", e);
+                renewableData = [];
             }
-        });
+        }
     });
 
-    document.getElementById('changeFilesButton').addEventListener('click', () => {
-        localStorage.removeItem('consumo');
-        localStorage.removeItem('participacion');
-        window.location.reload();
-    });
+    document.getElementById('loadButton').addEventListener('click', () => {
+        const file = document.getElementById('fileInput').files[0];
+        const statusDiv = document.getElementById('status');
 
-    function parseFile(file, key) {
-        return new Promise(resolve => {
+        if (file) {
             Papa.parse(file, {
                 header: true,
+                dynamicTyping: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    if (results.data) {
-                        allData[key] = results.data;
-                        localStorage.setItem(key, JSON.stringify(results.data));
+                    const data = results.data.filter(row => row.Entity && row.Year);
+                    localStorage.setItem(localStorageKey, JSON.stringify(data));
+                    
+                    renewableData = data;
+                    if (renewableData.length > 0) {
+                        const headers = Object.keys(renewableData[0]);
+                        shareHeader = headers.find(h => h.includes('Renewables (% equivalent primary energy)'));
                     }
-                    resolve();
+
+                    if (shareHeader) {
+                        statusDiv.innerHTML = `<div class="alert alert-success">Archivo "${file.name}" cargado y guardado correctamente.</div>`;
+                        document.getElementById('visualizations-container').classList.remove('d-none');
+                        renderGlobalHeatmap();
+                        populateFilters();
+                    } else {
+                        statusDiv.innerHTML = `<div class="alert alert-danger">Error: No se encontró la columna de participación de energías renovables.</div>`;
+                        document.getElementById('visualizations-container').classList.add('d-none');
+                    }
+                },
+                error: function(err) {
+                    statusDiv.innerHTML = `<div class="alert alert-danger">Error al parsear el archivo: ${err.message}</div>`;
                 }
             });
-        });
-    }
-
-    function loadDataFromLocalStorage() {
-        try {
-            allData['consumo'] = JSON.parse(localStorage.getItem('consumo'));
-            allData['participacion'] = JSON.parse(localStorage.getItem('participacion'));
-        } catch (e) {
-            console.error("Error al cargar datos desde localStorage", e);
+        } else {
+            statusDiv.innerHTML = `<div class="alert alert-warning">Por favor, selecciona un archivo.</div>`;
         }
-    }
-
-    function showDataView() {
-        document.getElementById('noDataMessage').classList.add('d-none');
-        document.getElementById('data-view').classList.remove('d-none');
-    }
-
-    function showNoDataMessage() {
-        document.getElementById('noDataMessage').classList.remove('d-none');
-        document.getElementById('data-view').classList.add('d-none');
-    }
-
-    document.getElementById('datasetSelect').addEventListener('change', (e) => {
-        currentDataKey = e.target.value;
-        const data = allData[currentDataKey];
-        renderTable(data);
     });
 
-    document.getElementById('countryFilter').addEventListener('change', filterTable);
-    document.getElementById('yearFilter').addEventListener('change', filterTable);
-
-    function renderTable(data) {
-        if (!data || data.length === 0) {
-            return;
-        }
-
-        const theadRow = document.querySelector('#dataTable thead tr');
-        const tbody = document.querySelector('#dataTable tbody');
-        theadRow.innerHTML = '';
-        tbody.innerHTML = '';
-        
-        const headers = Object.keys(data[0]);
-        theadRow.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
-
-        const dataSummary = document.getElementById('dataSummary');
-        const fileName = (currentDataKey === 'consumo') ? 'hydropower-consumption.csv' : '06 hydro-share-energy.csv';
-        dataSummary.innerHTML = `<strong>Datos cargados:</strong> ${data.length} filas en el archivo "${fileName}".`;
-        
-        populateFilters(data);
-
-        data.forEach(row => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = headers.map(h => `<td>${row[h] || 'N/A'}</td>`).join('');
-            tbody.appendChild(tr);
-        });
-    }
-
-    function populateFilters(data) {
+    function populateFilters() {
         const countryFilter = document.getElementById('countryFilter');
         const yearFilter = document.getElementById('yearFilter');
         
-        const countries = ['Todos', ...new Set(data.map(row => row['Entity']))].sort();
-        const years = ['Todos', ...new Set(data.map(row => row['Year']))].sort((a, b) => b - a);
+        const validEntries = renewableData.filter(d => d[shareHeader] !== null);
+        
+        const countries = [...new Set(validEntries.map(row => row['Entity']))].sort();
+        const years = [...new Set(validEntries.map(row => row['Year']))].sort((a, b) => b - a);
+        
+        countryFilter.innerHTML = '<option value="">Seleccione un país</option>' + countries.map(c => `<option value="${c}">${c}</option>`).join('');
+        yearFilter.innerHTML = '<option value="">Seleccione un año</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
 
-        countryFilter.innerHTML = countries.map(c => `<option value="${c}">${c}</option>`).join('');
-        yearFilter.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+        countryFilter.addEventListener('change', renderCharts);
+        yearFilter.addEventListener('change', renderCharts);
+        
+        renderCharts();
+    }
+    
+    function renderGlobalHeatmap() {
+        const heatmapContainer = document.getElementById('heatmap-container');
+        const validEntries = renewableData.filter(d => d[shareHeader] !== null && d.Entity && d.Year);
+        
+        const countries = [...new Set(validEntries.map(row => row.Entity))].sort();
+        const years = [...new Set(validEntries.map(row => row.Year))].sort((a, b) => a - b);
+        
+        let html = '<table class="heatmap-table">';
+        
+        html += '<thead><tr><th class="country-header corner-cell">País</th>';
+        years.forEach(year => {
+            html += `<th class="year-header">${year}</th>`;
+        });
+        html += '</tr></thead>';
+
+        html += '<tbody>';
+        countries.forEach(country => {
+            html += `<tr><td class="country-label">${country}</td>`;
+            years.forEach(year => {
+                const rowData = validEntries.find(d => d.Entity === country && d.Year === year);
+                const value = rowData ? parseFloat(rowData[shareHeader]) : null;
+                const color = getColor(value);
+                const title = value !== null ? `${country} (${year}): ${value.toFixed(2)}%` : 'Sin datos';
+                html += `<td class="data-cell" style="background-color: ${color}" title="${title}"></td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody>';
+        html += '</table>';
+        
+        heatmapContainer.innerHTML = html;
     }
 
-    function filterTable() {
-        const data = allData[currentDataKey];
-        const country = document.getElementById('countryFilter').value;
-        const year = document.getElementById('yearFilter').value;
+    function getColor(d) {
+        return d > 90 ? '#005a32' :
+               d > 80 ? '#238443' :
+               d > 70 ? '#41ab5d' :
+               d > 60 ? '#78c679' :
+               d > 50 ? '#addd8e' :
+               d > 40 ? '#d9f0a3' :
+               d > 30 ? '#fecc5c' :
+               d > 20 ? '#fd8d3c' :
+               d > 10 ? '#f03b20' :
+               d > 0  ? '#bd0026' :
+                        '#e0e0e0';
+    }
+    
+    function renderCharts() {
+        const selectedCountry = document.getElementById('countryFilter').value;
+        const selectedYear = document.getElementById('yearFilter').value;
+        const chartInfoMessage = document.getElementById('chartInfoMessage');
 
-        let filteredData = data;
+        if (window.charts) {
+            Object.values(window.charts).forEach(chart => chart.destroy());
+        }
+        window.charts = {};
 
-        if (country !== 'Todos') {
-            filteredData = filteredData.filter(row => row['Entity'] === country);
+        if (selectedCountry) {
+            renderEvolutionChart(selectedCountry);
+        } else {
+            const ctx = document.getElementById('evolutionChart').getContext('2d');
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         }
 
-        if (year !== 'Todos') {
-            filteredData = filteredData.filter(row => row['Year'] === year);
+        if (selectedCountry && selectedYear) {
+            const shareRow = renewableData.find(d => d.Entity === selectedCountry && d.Year == selectedYear);
+            if (!shareRow || shareRow[shareHeader] === null) {
+                chartInfoMessage.textContent = `No hay datos para la combinación de país "${selectedCountry}" y año "${selectedYear}".`;
+                chartInfoMessage.classList.remove('d-none');
+            } else {
+                chartInfoMessage.classList.add('d-none');
+                renderShareBarChart(shareRow, selectedCountry, selectedYear);
+                renderSharePieChart(shareRow, selectedCountry, selectedYear);
+            }
+        } else {
+            chartInfoMessage.textContent = `Por favor, seleccione un país y un año para ver los gráficos comparativos.`;
+            chartInfoMessage.classList.remove('d-none');
         }
+    }
+    
+    function renderEvolutionChart(selectedCountry) {
+        const countryData = renewableData.filter(d => d.Entity === selectedCountry && d[shareHeader] !== null);
+        const years = countryData.map(d => d.Year);
+        const values = countryData.map(d => parseFloat(d[shareHeader]));
 
-        const tbody = document.querySelector('#dataTable tbody');
-        tbody.innerHTML = '';
+        const ctx = document.getElementById('evolutionChart').getContext('2d');
+        window.charts.chart1 = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [{
+                    label: `Participación de Renovables en ${selectedCountry} (%)`,
+                    data: values,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: false,
+                    tension: 0.4,
+                    spanGaps: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Participación (%)' }
+                    }
+                }
+            }
+        });
+    }
 
-        if (filteredData.length > 0) {
-            const headers = Object.keys(filteredData[0]);
-            filteredData.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = headers.map(h => `<td>${row[h] || 'N/A'}</td>`).join('');
-                tbody.appendChild(tr);
-            });
-        }
+    function renderShareBarChart(shareRow, selectedCountry, selectedYear) {
+        const shareValor = parseFloat(shareRow[shareHeader]) || 0;
+        const worldData = renewableData.find(d => d.Entity === 'World' && d.Year == selectedYear);
+        const worldShare = worldData ? (parseFloat(worldData[shareHeader]) || 0) : 0;
+        
+        const ctx = document.getElementById('shareBarChart').getContext('2d');
+        window.charts.chart2 = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [selectedCountry, 'Mundo'],
+                datasets: [{
+                    label: `Participación Renovable en ${selectedYear}`,
+                    data: [shareValor, worldShare],
+                    backgroundColor: ['rgba(54, 162, 235, 0.7)', 'rgba(255, 99, 132, 0.7)'],
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'Participación (%)' } } }
+            }
+        });
+    }
+    
+    function renderSharePieChart(shareRow) {
+        const shareValor = parseFloat(shareRow[shareHeader]) || 0;
+        const otherEnergy = Math.max(0, 100 - shareValor);
+        
+        const ctx = document.getElementById('sharePieChart').getContext('2d');
+        window.charts.chart3 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Energía Renovable', 'Otras Fuentes'],
+                datasets: [{
+                    data: [shareValor, otherEnergy],
+                    backgroundColor: ['rgba(75, 192, 192, 0.7)', 'rgba(201, 203, 207, 0.7)'],
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                return `${label}: ${value.toFixed(2)}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 </script>
+
+<style>
+/* Estilos para el mapa de calor */
+.heatmap-box {
+    height: 400px;
+    width: 100%;
+    overflow: auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.heatmap-table {
+    width: auto;
+    min-width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+    position: relative;
+}
+.heatmap-table th, .heatmap-table td {
+    border: 1px solid #ddd;
+    text-align: center;
+    padding: 2px;
+    white-space: nowrap;
+}
+.heatmap-table thead th {
+    background-color: #f2f2f2;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.heatmap-table .country-header {
+    text-align: left;
+    background-color: #f8f8f8;
+    font-weight: 500;
+    min-width: 100px;
+}
+.heatmap-table .year-header {
+    min-width: 40px;
+}
+.heatmap-table .data-cell {
+    width: 40px;
+    height: 20px;
+}
+
+/* Columna de países fija */
+.heatmap-table .country-label {
+    text-align: left;
+    background-color: #f8f8f8;
+    font-weight: 500;
+    min-width: 100px;
+    position: sticky;
+    left: 0;
+    z-index: 9;
+}
+
+/* Celda de la esquina superior izquierda fija (País) */
+.heatmap-table .corner-cell {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 11;
+    background-color: #f2f2f2;
+}
+
+</style>
 
 </body>
 </html>

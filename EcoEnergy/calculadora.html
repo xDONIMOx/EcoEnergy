@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Calculadora - EcoEnergy</title>
+    <title>Calculadora EcoEnergy</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
@@ -17,122 +17,187 @@
             <span class="section">NAVEGACIÓN</span>
             <a href="index.html">Inicio</a>
             <a href="hidroelectrica.html">Energía Hidroeléctrica</a>
-            <a href="datos.html">Cargar Datos</a>
+            <a href="datos.html">Visualizar Datos</a>
             <a href="calculadora.html" class="active">Calculadora</a>
             <a href="dashboard.html">Dashboard Visual</a>
         </nav>
     </aside>
 
     <main class="main">
-        <h3>Calculadora de Consumo de Energía Renovable</h3>
-        <p>Estime el porcentaje de energía renovable en su consumo eléctrico total.</p>
+        <h3>Calculadora de Consumo Renovable</h3>
+        <p>Realiza una estimación detallada del porcentaje de energía renovable en tu consumo eléctrico total, basada en el mix energético de una región o país.</p>
 
-        <div id="loadingMessage" class="alert alert-info">
-            Cargando datos. Por favor, espere...
-        </div>
-        <div id="noDataMessage" class="alert alert-warning d-none">
-            <p><strong>Atención:</strong> No se han encontrado datos. Por favor, <a href="datos.html">cargue un archivo CSV</a> primero.</p>
+        <div id="loading" class="alert alert-info">Cargando archivos de datos desde la carpeta local...</div>
+        <div id="noDataMessage" class="alert alert-danger d-none">
+            <p><strong>Error:</strong> No se pudieron cargar los archivos de datos necesarios. Asegúrate de que los archivos CSV están en la misma carpeta.</p>
         </div>
 
-        <form id="calculationForm" class="d-none">
-            <div class="mb-3">
-                <label for="userConsumption" class="form-label">Consumo Eléctrico Anual (kWh):</label>
-                <input type="number" id="userConsumption" class="form-control" required min="1">
+        <div id="calculator-content" class="d-none">
+            <div class="form-group mb-3">
+                <label for="countrySelect" class="form-label">Selecciona una región o país para el cálculo:</label>
+                <select id="countrySelect" class="form-control"></select>
             </div>
-            <div class="mb-3">
-                <label for="countrySelect" class="form-label">Seleccione una entidad/país:</label>
-                <select id="countrySelect" class="form-control" required></select>
+            
+            <div class="form-group mb-3">
+                <label for="yearSelect" class="form-label">Selecciona un año:</label>
+                <select id="yearSelect" class="form-control"></select>
             </div>
-            <div class="mb-3">
-                <label for="yearSelect" class="form-label">Seleccione un año:</label>
-                <select id="yearSelect" class="form-control" required></select>
-            </div>
-            <button type="submit" class="btn btn-primary">Calcular</button>
-        </form>
 
-        <div id="resultContainer" class="mt-4 p-4 rounded d-none" style="background-color: #e9ecef;">
-            <h4>Resultados</h4>
-            <div id="calculationResult"></div>
+            <div class="form-group mb-3">
+                <label for="consumptionInput" class="form-label">Ingresa tu consumo eléctrico total (kWh) anual:</label>
+                <input type="number" id="consumptionInput" class="form-control" placeholder="Ej: 3600" required>
+            </div>
+            
+            <button id="calculateBtn" class="btn btn-primary">Calcular</button>
+
+            <div id="results" class="results-card mt-4 d-none">
+                <h4 class="mb-3">Análisis de la Región y Proyección Personal</h4>
+                <div id="countryAnalysis"></div>
+                <hr>
+                <div id="personalProjection"></div>
+                <div class="alert alert-info mt-3">
+                    <p class="mb-0"><strong>Aclaración:</strong> Este cálculo es una estimación hipotética. El porcentaje real de energía renovable en tu consumo depende del mix energético de tu proveedor local y de tu plan de electricidad.</p>
+                </div>
+            </div>
         </div>
     </main>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const storedData = localStorage.getItem('renewableData');
-        const loadingMessage = document.getElementById('loadingMessage');
-        const noDataMessage = document.getElementById('noDataMessage');
-        const form = document.getElementById('calculationForm');
+    const dataFiles = [
+        { key: 'prod', url: '03 modern-renewable-prod.csv' },
+        { key: 'shareRenewables', url: '04 share-electricity-renewables.csv' },
+        { key: 'windCapacity', url: '09 cumulative-installed-wind-energy-capacity-gigawatts.csv' },
+    ];
 
-        if (storedData) {
-            loadingMessage.classList.add('d-none');
-            form.classList.remove('d-none');
-            const rawData = JSON.parse(storedData);
-            populateDropdowns(rawData);
-        } else {
-            loadingMessage.classList.add('d-none');
-            noDataMessage.classList.remove('d-none');
-        }
+    let allData = {};
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        loadData();
     });
 
-    function populateDropdowns(data) {
-        const countrySelect = document.getElementById('countrySelect');
-        const yearSelect = document.getElementById('yearSelect');
-        countrySelect.innerHTML = '';
-        yearSelect.innerHTML = '';
-
-        const countries = [...new Set(data.map(row => row['Entity']))].sort();
-        countries.forEach(country => {
-            const option = document.createElement('option');
-            option.value = country;
-            option.textContent = country;
-            countrySelect.appendChild(option);
+    function loadData() {
+        const promises = dataFiles.map(file => {
+            return new Promise((resolve, reject) => {
+                Papa.parse(file.url, {
+                    download: true,
+                    header: true,
+                    dynamicTyping: true,
+                    skipEmptyLines: true,
+                    complete: (results) => {
+                        allData[file.key] = results.data;
+                        resolve();
+                    },
+                    error: (error) => {
+                        reject(error);
+                    }
+                });
+            });
         });
 
-        const years = [...new Set(data.map(row => row['Year']))].sort((a, b) => b - a);
-        years.forEach(year => {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            yearSelect.appendChild(option);
-        });
+        Promise.all(promises)
+            .then(() => {
+                document.getElementById('loading').classList.add('d-none');
+                document.getElementById('calculator-content').classList.remove('d-none');
+                populateFilters();
+                document.getElementById('calculateBtn').addEventListener('click', calculateRenewableConsumption);
+            })
+            .catch(error => {
+                console.error("Error loading data files:", error);
+                document.getElementById('loading').classList.add('d-none');
+                document.getElementById('noDataMessage').classList.remove('d-none');
+            });
     }
 
-    document.getElementById('calculationForm').addEventListener('submit', function(e) {
-        e.preventDefault();
+    function populateFilters() {
+        const countrySelect = document.getElementById('countrySelect');
+        const yearSelect = document.getElementById('yearSelect');
+        
+        const countries = [...new Set(allData.prod.map(row => row.Entity))].sort();
+        const years = [...new Set(allData.prod.map(row => row.Year))].sort((a, b) => b - a);
 
-        const storedData = localStorage.getItem('renewableData');
-        if (!storedData) {
-            alert('No hay datos cargados. Por favor, vuelva a la página de "Cargar Datos".');
-            return;
-        }
+        countrySelect.innerHTML = countries.map(c => `<option value="${c}">${c}</option>`).join('');
+        yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
 
-        const rawData = JSON.parse(storedData);
-        const userConsumption = parseFloat(document.getElementById('userConsumption').value);
+        countrySelect.value = 'World';
+        yearSelect.value = '2021';
+    }
+
+    function calculateRenewableConsumption() {
+        const consumptionInput = document.getElementById('consumptionInput');
         const selectedCountry = document.getElementById('countrySelect').value;
         const selectedYear = document.getElementById('yearSelect').value;
 
-        const row = rawData.find(d => d['Entity'] === selectedCountry && d['Year'] === selectedYear);
+        const userConsumption = parseFloat(consumptionInput.value);
 
-        if (!row || !row['Renewables (% equivalent primary energy)']) {
-            document.getElementById('calculationResult').innerHTML = '<p>No se encontraron datos de porcentaje renovable para la selección. Intente con otro país o año.</p>';
-            document.getElementById('resultContainer').classList.remove('d-none');
+        if (isNaN(userConsumption) || userConsumption <= 0) {
+            alert('Por favor, ingresa un consumo eléctrico válido (un número mayor que cero).');
             return;
         }
 
-        const renewablePercentage = parseFloat(row['Renewables (% equivalent primary energy)']);
-        const renewableConsumption = userConsumption * (renewablePercentage / 100);
+        const prodRow = allData.prod.find(d => d.Entity === selectedCountry && d.Year == selectedYear);
+        const shareRow = allData.shareRenewables.find(d => d.Entity === selectedCountry && d.Year == selectedYear);
+        const windCapacityRow = allData.windCapacity.find(d => d.Entity === selectedCountry && d.Year == selectedYear);
         
-        document.getElementById('calculationResult').innerHTML = `
-            <p>Con base en un **${renewablePercentage.toFixed(2)}%** de energía renovable en **${selectedCountry}** durante **${selectedYear}**:</p>
+        if (!prodRow || !shareRow) {
+            alert(`No se encontraron datos de producción para ${selectedCountry} en el año ${selectedYear}.`);
+            return;
+        }
+
+        // 1. Análisis del Mix Energético de la Región
+        const totalRenewableProd = (prodRow['Electricity from wind (TWh)'] || 0) +
+                                   (prodRow['Electricity from hydro (TWh)'] || 0) +
+                                   (prodRow['Electricity from solar (TWh)'] || 0) +
+                                   (prodRow['Other renewables including bioenergy (TWh)'] || 0);
+        
+        const renewableSharePercentage = shareRow['Renewables (% electricity)'];
+        const totalProduction = (totalRenewableProd * 100) / renewableSharePercentage;
+        const nonRenewableShare = 100 - renewableSharePercentage;
+
+        // Porcentajes de contribución de cada fuente renovable
+        const windShare = (prodRow['Electricity from wind (TWh)'] / totalProduction) * 100;
+        const hydroShare = (prodRow['Electricity from hydro (TWh)'] / totalProduction) * 100;
+        const solarShare = (prodRow['Electricity from solar (TWh)'] / totalProduction) * 100;
+        const otherShare = (prodRow['Other renewables including bioenergy (TWh)'] / totalProduction) * 100;
+
+        // 2. Proyección de Consumo Personal
+        const renewableConsumptionKWh = (userConsumption * renewableSharePercentage) / 100;
+        const nonRenewableConsumptionKWh = (userConsumption * nonRenewableShare) / 100;
+
+        const resultsDiv = document.getElementById('results');
+        const countryAnalysisDiv = document.getElementById('countryAnalysis');
+        const personalProjectionDiv = document.getElementById('personalProjection');
+        
+        // Formatear la salida del análisis del país
+        countryAnalysisDiv.innerHTML = `
+            <p><strong>Análisis de la producción eléctrica en ${selectedCountry} en ${selectedYear}:</strong></p>
             <ul>
-                <li>Su consumo estimado de energía renovable sería de <strong>${renewableConsumption.toFixed(2)} kWh</strong> al año.</li>
-                <li>Esto representa el <strong>${renewablePercentage.toFixed(2)}%</strong> de su consumo total.</li>
+                <li><strong>Energía Renovable Total:</strong> ${renewableSharePercentage.toFixed(2)}% del total.</li>
+                <li><strong>Energía No Renovable:</strong> ${nonRenewableShare.toFixed(2)}% del total.</li>
             </ul>
+            <p><strong>Contribución de cada fuente renovable:</strong></p>
+            <ul>
+                <li>Eólica: ${windShare.toFixed(2)}%</li>
+                <li>Hidroeléctrica: ${hydroShare.toFixed(2)}%</li>
+                <li>Solar: ${solarShare.toFixed(2)}%</li>
+                <li>Otras (bioenergía, etc.): ${otherShare.toFixed(2)}%</li>
+            </ul>
+            ${windCapacityRow ? `<p><strong>Capacidad de Energía Eólica Instalada:</strong> ${parseFloat(windCapacityRow['Wind Capacity']).toFixed(2)} GW</p>` : ''}
         `;
-        document.getElementById('resultContainer').classList.remove('d-none');
-    });
+
+        // Formatear la salida de la proyección personal
+        personalProjectionDiv.innerHTML = `
+            <p><strong>Proyección de tu consumo anual (${userConsumption.toFixed(2)} kWh):</strong></p>
+            <ul>
+                <li><strong>Consumo estimado de energía renovable:</strong> ${renewableConsumptionKWh.toFixed(2)} kWh</li>
+                <li><strong>Consumo estimado de energía no renovable:</strong> ${nonRenewableConsumptionKWh.toFixed(2)} kWh</li>
+            </ul>
+            <p>Con base en el mix energético de ${selectedCountry} en ${selectedYear}, aproximadamente el <strong>${renewableSharePercentage.toFixed(2)}%</strong> de tu consumo anual sería de fuentes renovables.</p>
+        `;
+        
+        resultsDiv.classList.remove('d-none');
+    }
 </script>
 
 </body>

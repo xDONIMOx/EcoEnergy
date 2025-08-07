@@ -24,11 +24,12 @@
     </aside>
 
     <main class="main">
-        <h3>Dashboard de Energía Hidroeléctrica</h3>
-        <p>Análisis de la producción y la participación de la energía hidroeléctrica a nivel global.</p>
+        <h3>Dashboard de Energías Renovables</h3>
+        <p>Análisis detallado de la producción y consumo de energías renovables utilizando múltiples fuentes de datos.</p>
         
-        <div id="noDataMessage" class="alert alert-warning d-none">
-            <p><strong>Atención:</strong> No se han encontrado datos. Por favor, <a href="datos.html">cargue los archivos CSV</a> primero.</p>
+        <div id="loading" class="alert alert-info">Cargando archivos de datos desde la carpeta local...</div>
+        <div id="noDataMessage" class="alert alert-danger d-none">
+            <p><strong>Error:</strong> No se pudieron cargar todos los archivos de datos necesarios. Asegúrate de que los archivos CSV están en la misma carpeta.</p>
         </div>
 
         <div id="dashboard-content" class="d-none">
@@ -43,36 +44,36 @@
                 </div>
             </div>
             
-            <div id="chartInfoMessage" class="alert alert-info d-none">
-                No hay datos disponibles para la combinación de país y año seleccionada.
+            <div id="chartInfoMessage" class="alert alert-warning d-none">
+                Selecciona un país para ver la tendencia histórica o un año para ver la distribución.
             </div>
 
-            <div class="dashboard-grid full-width">
+            <div class="dashboard-grid">
                 <div class="chart-card large-chart-card">
-                    <h4>Evolución del Consumo y la Participación Hidroeléctrica</h4>
-                    <canvas id="productionEvolutionChart"></canvas>
+                    <h4>Producción de Energía Renovable por Fuente (TWh)</h4>
+                    <p class="text-muted">Muestra la cantidad de energía producida por cada fuente renovable en el año seleccionado.</p>
+                    <canvas id="barChart"></canvas>
                 </div>
             </div>
-            
-            <hr class="my-5">
             
             <div class="dashboard-grid">
                 <div class="chart-card">
-                    <h4>Consumo vs. Participación en el Año Seleccionado</h4>
-                    <canvas id="consumptionAndShareChart"></canvas>
+                    <h4>Participación de Energías Renovables (%)</h4>
+                    <p class="text-muted">Muestra el porcentaje de cada tipo de energía renovable en el total del consumo eléctrico.</p>
+                    <canvas id="pieChart"></canvas>
                 </div>
                 <div class="chart-card">
-                    <h4>Distribución de la Participación Energética</h4>
-                    <canvas id="hydroSharePieChart"></canvas>
+                    <h4>Consumo de Energía Renovable Moderna (TWh)</h4>
+                    <p class="text-muted">Muestra la evolución del consumo de energía renovable moderna a lo largo del tiempo.</p>
+                    <canvas id="areaChart"></canvas>
                 </div>
             </div>
             
-            <hr class="my-5">
-            
             <div class="dashboard-grid full-width">
                 <div class="chart-card large-chart-card">
-                    <h4>Consumo Hidroeléctrico vs. Promedio Mundial</h4>
-                    <canvas id="evolutionComparisonChart"></canvas>
+                    <h4>Tendencia en la Producción de Energía (TWh)</h4>
+                    <p class="text-muted">Muestra la evolución de la producción de energía eólica, solar e hidroeléctrica a lo largo del tiempo.</p>
+                    <canvas id="lineChart"></canvas>
                 </div>
             </div>
         </div>
@@ -82,52 +83,68 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    let hydroConsumptionData = [];
-    let hydroShareData = [];
-    let consumptionHeader = '';
-    let shareHeader = '';
+    const dataFiles = [
+        { key: 'prod', url: '03 modern-renewable-prod.csv' },
+        { key: 'shareTotal', url: '04 share-electricity-renewables.csv' },
+        { key: 'shareHydro', url: '07 share-electricity-hydro.csv' },
+        { key: 'consumption', url: '02 modern-renewable-energy-consumption.csv' },
+    ];
+
+    let allData = {};
+    let charts = {};
 
     document.addEventListener('DOMContentLoaded', () => {
-        const hydroConsumption = localStorage.getItem('consumo');
-        const hydroShare = localStorage.getItem('participacion');
-
-        if (hydroConsumption && hydroShare) {
-            hydroConsumptionData = JSON.parse(hydroConsumption);
-            hydroShareData = JSON.parse(hydroShare);
-            
-            if (hydroConsumptionData.length > 0) {
-                const headers = Object.keys(hydroConsumptionData[0]);
-                consumptionHeader = headers.find(h => h.includes('Electricity from hydro'));
-            }
-            if (hydroShareData.length > 0) {
-                const headers = Object.keys(hydroShareData[0]);
-                shareHeader = headers.find(h => h.includes('Hydro (% equivalent primary energy)'));
-            }
-            
-            if (!consumptionHeader || !shareHeader) {
-                alert('Error: Los encabezados de los archivos CSV no coinciden con los esperados.');
-                return;
-            }
-
-            document.getElementById('noDataMessage').classList.add('d-none');
-            document.getElementById('dashboard-content').classList.remove('d-none');
-
-            populateFilters();
-            renderCharts();
-        } else {
-            document.getElementById('noDataMessage').classList.remove('d-none');
-        }
+        loadAllData();
     });
+
+    function loadAllData() {
+        const promises = dataFiles.map(file => {
+            return new Promise((resolve, reject) => {
+                Papa.parse(file.url, {
+                    download: true,
+                    header: true,
+                    dynamicTyping: true,
+                    skipEmptyLines: true,
+                    complete: (results) => {
+                        allData[file.key] = results.data;
+                        resolve();
+                    },
+                    error: (error) => {
+                        reject(error);
+                    }
+                });
+            });
+        });
+
+        Promise.all(promises)
+            .then(() => {
+                document.getElementById('loading').classList.add('d-none');
+                document.getElementById('dashboard-content').classList.remove('d-none');
+                populateFilters();
+                renderCharts(); // Carga los gráficos con los valores por defecto
+            })
+            .catch(error => {
+                console.error("Error loading data files:", error);
+                document.getElementById('loading').classList.add('d-none');
+                document.getElementById('noDataMessage').classList.remove('d-none');
+            });
+    }
 
     function populateFilters() {
         const countryFilter = document.getElementById('countryFilter');
         const yearFilter = document.getElementById('yearFilter');
         
-        const countries = [...new Set(hydroConsumptionData.map(row => row['Entity']))].sort();
-        const years = [...new Set(hydroConsumptionData.map(row => row['Year']))].sort((a, b) => b - a);
+        const validEntries = allData.prod.filter(d => d.Entity && d.Year);
         
-        countryFilter.innerHTML = countries.map(c => `<option value="${c}">${c}</option>`).join('');
-        yearFilter.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+        const countries = [...new Set(validEntries.map(row => row.Entity))].sort();
+        const years = [...new Set(validEntries.map(row => row.Year))].sort((a, b) => b - a);
+        
+        countryFilter.innerHTML = '<option value="">Seleccione un país</option>' + countries.map(c => `<option value="${c}">${c}</option>`).join('');
+        yearFilter.innerHTML = '<option value="">Seleccione un año</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
+
+        // Establecer valores por defecto
+        countryFilter.value = 'World';
+        yearFilter.value = '2021';
 
         countryFilter.addEventListener('change', renderCharts);
         yearFilter.addEventListener('change', renderCharts);
@@ -138,130 +155,106 @@
         const selectedYear = document.getElementById('yearFilter').value;
         const chartInfoMessage = document.getElementById('chartInfoMessage');
 
-        if (window.charts) {
-            Object.values(window.charts).forEach(chart => chart.destroy());
-        }
-        window.charts = {};
+        // Destruir gráficos anteriores
+        if (charts.barChart) charts.barChart.destroy();
+        if (charts.pieChart) charts.pieChart.destroy();
+        if (charts.lineChart) charts.lineChart.destroy();
+        if (charts.areaChart) charts.areaChart.destroy();
+        
+        // Determinar qué gráficos renderizar en función de la selección de filtros
+        const countryIsSelected = selectedCountry !== '';
+        const yearIsSelected = selectedYear !== '';
 
-        const consumoData = hydroConsumptionData.find(d => d.Entity === selectedCountry && d.Year === selectedYear);
-        const shareData = hydroShareData.find(d => d.Entity === selectedCountry && d.Year === selectedYear);
-
-        const hasCurrentYearData = consumoData && shareData && consumoData[consumptionHeader] && shareData[shareHeader];
-
-        if (!hasCurrentYearData) {
-            chartInfoMessage.textContent = `No hay datos para la combinación de país "${selectedCountry}" y año "${selectedYear}".`;
+        if (!countryIsSelected && !yearIsSelected) {
+            // No hay filtros seleccionados, se muestra el estado inicial (podría ser un mensaje o un render por defecto si no lo hacemos al inicio)
+            chartInfoMessage.textContent = 'Selecciona un país para ver la tendencia histórica o un año para ver la distribución.';
             chartInfoMessage.classList.remove('d-none');
-        } else {
-            chartInfoMessage.classList.add('d-none');
-            renderConsumptionAndShareChart(consumoData, shareData, selectedCountry, selectedYear);
-            renderHydroSharePieChart(shareData, selectedCountry, selectedYear);
+            return;
         }
 
-        renderProductionEvolutionChart(selectedCountry);
-        renderEvolutionComparisonChart(selectedCountry);
+        chartInfoMessage.classList.add('d-none');
+
+        // Renderizar los gráficos de tendencia si se selecciona un país
+        if (countryIsSelected) {
+            renderLineChart(selectedCountry);
+            renderAreaChart(selectedCountry);
+        }
+
+        // Renderizar los gráficos de distribución si se selecciona un año
+        if (yearIsSelected) {
+            // Si el país no está seleccionado, se usa 'World' para los gráficos de distribución
+            const countryForDistribution = countryIsSelected ? selectedCountry : 'World';
+            renderBarChart(countryForDistribution, selectedYear);
+            renderPieChart(countryForDistribution, selectedYear);
+        }
     }
     
-    // Gráfico de Evolución de la Producción y Participación
-    function renderProductionEvolutionChart(selectedCountry) {
-        const countryConsumption = hydroConsumptionData.filter(d => d.Entity === selectedCountry && d[consumptionHeader]);
-        const countryShare = hydroShareData.filter(d => d.Entity === selectedCountry && d[shareHeader]);
+    function renderBarChart(country, year) {
+        const row = allData.prod.find(d => d.Entity === country && d.Year == year);
+        if (!row) return;
         
-        const years = [...new Set([...countryConsumption.map(d => d.Year), ...countryShare.map(d => d.Year)])].sort();
+        const labels = ['Eólica', 'Hidroeléctrica', 'Solar', 'Bioenergía y otras'];
+        const data = [
+            row['Electricity from wind (TWh)'],
+            row['Electricity from hydro (TWh)'],
+            row['Electricity from solar (TWh)'],
+            row['Other renewables including bioenergy (TWh)']
+        ];
 
-        const consumptionValues = years.map(year => {
-            const data = countryConsumption.find(d => d.Year === year);
-            return data ? parseFloat(data[consumptionHeader]) || null : null;
-        });
-
-        const shareValues = years.map(year => {
-            const data = countryShare.find(d => d.Year === year);
-            return data ? parseFloat(data[shareHeader]) || null : null;
-        });
-
-        window.charts.chart4 = new Chart(document.getElementById('productionEvolutionChart').getContext('2d'), {
-            type: 'line',
+        const ctx = document.getElementById('barChart').getContext('2d');
+        charts.barChart = new Chart(ctx, {
+            type: 'bar',
             data: {
-                labels: years,
-                datasets: [
-                    {
-                        label: `Consumo Hidroeléctrico (TWh)`,
-                        data: consumptionValues,
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        yAxisID: 'y1',
-                        tension: 0.4,
-                        spanGaps: true
-                    },
-                    {
-                        label: `Participación (%)`,
-                        data: shareValues,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        yAxisID: 'y2',
-                        tension: 0.4,
-                        spanGaps: true
-                    }
-                ]
+                labels: labels,
+                datasets: [{
+                    label: `Producción de Energía Renovable en ${year} (TWh)`,
+                    data: data,
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(153, 102, 255, 0.7)'
+                    ],
+                }]
             },
             options: {
                 responsive: true,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
                 scales: {
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        title: { display: true, text: 'Consumo (TWh)' }
-                    },
-                    y2: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        title: { display: true, text: 'Participación (%)' },
-                        grid: { drawOnChartArea: false }
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'TWh' }
                     }
                 }
             }
         });
     }
 
-    // Gráfico 1: Consumo y Participación Hidroeléctrica
-    function renderConsumptionAndShareChart(consumoData, shareData, selectedCountry, selectedYear) {
-        const consumoValor = parseFloat(consumoData[consumptionHeader]) || 0;
-        const shareValor = parseFloat(shareData[shareHeader]) || 0;
+    function renderPieChart(country, year) {
+        const totalShareRow = allData.shareTotal.find(d => d.Entity === country && d.Year == year);
+        const hydroShareRow = allData.shareHydro.find(d => d.Entity === country && d.Year == year);
         
-        window.charts.chart1 = new Chart(document.getElementById('consumptionAndShareChart').getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: ['Consumo (TWh)', 'Participación (%)'],
-                datasets: [{
-                    label: `Datos para ${selectedCountry} en ${selectedYear}`,
-                    data: [consumoValor, shareValor],
-                    backgroundColor: ['rgba(54, 162, 235, 0.7)', 'rgba(75, 192, 192, 0.7)'],
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-    
-    // Gráfico 2: Participación Hidroeléctrica vs. Otras Fuentes
-    function renderHydroSharePieChart(shareData, selectedCountry, selectedYear) {
-        const shareValor = parseFloat(shareData[shareHeader]) || 0;
-        const otherEnergy = Math.max(0, 100 - shareValor);
+        if (!totalShareRow || !hydroShareRow) return;
+
+        const totalRenewableShare = totalShareRow['Renewables (% electricity)'] || 0;
+        const hydroShare = hydroShareRow['Hydro (% electricity)'] || 0;
+        const otherRenewableShare = Math.max(0, totalRenewableShare - hydroShare);
+        const nonRenewableShare = Math.max(0, 100 - totalRenewableShare);
         
-        window.charts.chart2 = new Chart(document.getElementById('hydroSharePieChart').getContext('2d'), {
+        const labels = ['Hidroeléctrica', 'Otras Renovables', 'No Renovables'];
+        const data = [hydroShare, otherRenewableShare, nonRenewableShare];
+
+        const ctx = document.getElementById('pieChart').getContext('2d');
+        charts.pieChart = new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: ['Hidroeléctrica', 'Otras Fuentes'],
+                labels: labels,
                 datasets: [{
-                    data: [shareValor, otherEnergy],
-                    backgroundColor: ['rgba(54, 162, 235, 0.7)', 'rgba(201, 203, 207, 0.7)'],
+                    data: data,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(201, 203, 207, 0.7)'
+                    ],
                 }]
             },
             options: {
@@ -280,38 +273,40 @@
             }
         });
     }
+    
+    function renderLineChart(country) {
+        const countryData = allData.prod.filter(d => d.Entity === country && d['Electricity from wind (TWh)'] !== null);
+        const years = countryData.map(d => d.Year);
+        const windValues = countryData.map(d => parseFloat(d['Electricity from wind (TWh)']));
+        const solarValues = countryData.map(d => parseFloat(d['Electricity from solar (TWh)']));
+        const hydroValues = countryData.map(d => parseFloat(d['Electricity from hydro (TWh)']));
 
-    // Gráfico 3: Evolución del Consumo Hidroeléctrico vs. Promedio Mundial
-    function renderEvolutionComparisonChart(selectedCountry) {
-        const worldData = hydroConsumptionData.filter(d => d.Entity === 'World' && d[consumptionHeader]);
-        const worldYears = worldData.map(d => d.Year);
-        const worldValues = worldData.map(d => parseFloat(d[consumptionHeader]) || 0);
-        
-        const countryDataConsumoAllYears = hydroConsumptionData.filter(d => d.Entity === selectedCountry);
-        const countryValues = worldYears.map(year => {
-            const row = countryDataConsumoAllYears.find(d => d.Year === year);
-            return row ? parseFloat(row[consumptionHeader]) || null : null;
-        });
-
-        window.charts.chart3 = new Chart(document.getElementById('evolutionComparisonChart').getContext('2d'), {
+        const ctx = document.getElementById('lineChart').getContext('2d');
+        charts.lineChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: worldYears,
+                labels: years,
                 datasets: [
                     {
-                        label: `${selectedCountry} (TWh)`,
-                        data: countryValues,
+                        label: 'Producción Eólica (TWh)',
+                        data: windValues,
                         borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         fill: false,
-                        spanGaps: true,
+                        tension: 0.4,
                     },
                     {
-                        label: 'Mundial (TWh)',
-                        data: worldValues,
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        label: 'Producción Solar (TWh)',
+                        data: solarValues,
+                        borderColor: 'rgba(255, 206, 86, 1)',
                         fill: false,
+                        tension: 0.4,
+                    },
+                    {
+                        label: 'Producción Hidroeléctrica (TWh)',
+                        data: hydroValues,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        fill: false,
+                        tension: 0.4,
                     }
                 ]
             },
@@ -319,7 +314,44 @@
                 responsive: true,
                 scales: {
                     y: {
-                        title: { display: true, text: 'Consumo (TWh)' }
+                        beginAtZero: true,
+                        title: { display: true, text: 'TWh' }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderAreaChart(country) {
+        const countryData = allData.consumption.filter(d => d.Entity === country);
+        const years = countryData.map(d => d.Year);
+        const renewableConsumption = countryData.map(d => 
+            (d['Geo Biomass Other - TWh'] || 0) +
+            (d['Solar Generation - TWh'] || 0) +
+            (d['Wind Generation - TWh'] || 0) +
+            (d['Hydro Generation - TWh'] || 0)
+        );
+
+        const ctx = document.getElementById('areaChart').getContext('2d');
+        charts.areaChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [{
+                    label: `Consumo de Energía Renovable Moderna en ${country} (TWh)`,
+                    data: renewableConsumption,
+                    backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'TWh' }
                     }
                 }
             }

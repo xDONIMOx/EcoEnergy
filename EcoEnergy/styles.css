@@ -335,6 +335,13 @@ body {
     filter: brightness(60%); /* Oscurece la imagen para que el texto resalte */
 }
 
+.nohero-image {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    filter: brightness(60%); /* Oscurece la imagen para que el texto resalte */
+}
+
 .hero-text {
     position: absolute;
     top: 50%;
@@ -603,5 +610,50 @@ body {
     .dashboard-filters {
         flex-direction: column;
         align-items: stretch;
+    }
+}
+
+/* Estilos para el botón responsivo y la barra lateral */
+.menu-toggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 1000;
+    display: none; /* Ocultar por defecto en pantallas grandes */
+}
+
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -250px;
+        width: 250px;
+        height: 100%;
+        transition: left 0.3s ease;
+        z-index: 999;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    }
+    
+    .main {
+        margin-left: 0;
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .menu-toggle {
+        display: block; /* Mostrar el botón en pantallas pequeñas */
     }
 }
