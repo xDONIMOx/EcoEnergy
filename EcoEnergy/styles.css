@@ -19,6 +19,9 @@ body {
     font-family: 'Poppins', sans-serif;
     background-color: var(--main-bg);
     color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 hr {
@@ -29,7 +32,9 @@ hr {
 
 /* --- 2. Estructura Principal y Navegación --- */
 .container {
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 .sidebar {
@@ -90,6 +95,7 @@ hr {
     margin-left: 250px;
     padding: 40px;
     width: calc(100% - 250px);
+    flex-grow: 1;
 }
 
 .main h2, .main h3 {
@@ -562,4 +568,50 @@ hr {
 .dashboard-grid {
     margin-top: 1rem;
 }
+
+}
+
+/* --- Estilos del Footer --- */
+.footer {
+    background-color: var(--sidebar-bg);
+    color: var(--text-light);
+    padding: 20px 40px;
+    margin-left: 250px;
+    text-align: center;
+    font-size: 0.9rem;
+    position: relative;
+    width: calc(100% - 250px);
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-links a {
+    color: var(--text-light);
+    text-decoration: none;
+    margin-left: 15px;
+    transition: color 0.3s;
+}
+
+.footer-links a:hover {
+    color: var(--secondary-color);
+}
+
+/* Ajuste para pantallas más pequeñas, similar a los estilos existentes */
+@media (max-width: 768px) {
+    .footer {
+        margin-left: 0;
+        width: 100%;
+        padding: 20px;
+    }
+    .footer-content {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .footer-links {
+        margin-top: 10px;
+    }
 }
