@@ -58,5 +58,18 @@
             </div>
         </main>
     </div>
+    
+    <script>
+    src="script.js"
+    document.addEventListener('DOMContentLoaded', () => {
+        const menuToggle = document.querySelector('.menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const main = document.querySelector('.main');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+    });
+</script>
 </body>
 </html>
