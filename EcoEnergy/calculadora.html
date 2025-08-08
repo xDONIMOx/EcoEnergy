@@ -70,6 +70,7 @@
         { key: 'prod', url: '03 modern-renewable-prod.csv' },
         { key: 'shareRenewables', url: '04 share-electricity-renewables.csv' },
         { key: 'windCapacity', url: '09 cumulative-installed-wind-energy-capacity-gigawatts.csv' },
+        { key: 'shareHydro', url: '07 share-electricity-hydro.csv' }, // Este archivo faltaba
     ];
 
     let allData = {};
@@ -111,6 +112,7 @@
             });
     }
 
+
     function populateFilters() {
         const countrySelect = document.getElementById('countrySelect');
         const yearSelect = document.getElementById('yearSelect');
@@ -126,79 +128,91 @@
     }
 
     function calculateRenewableConsumption() {
-        const consumptionInput = document.getElementById('consumptionInput');
-        const selectedCountry = document.getElementById('countrySelect').value;
-        const selectedYear = document.getElementById('yearSelect').value;
+    const consumptionInput = document.getElementById('consumptionInput');
+    const selectedCountry = document.getElementById('countrySelect').value;
+    const selectedYear = document.getElementById('yearSelect').value;
 
-        const userConsumption = parseFloat(consumptionInput.value);
+    const userConsumption = parseFloat(consumptionInput.value);
 
-        if (isNaN(userConsumption) || userConsumption <= 0) {
-            alert('Por favor, ingresa un consumo eléctrico válido (un número mayor que cero).');
-            return;
-        }
-
-        const prodRow = allData.prod.find(d => d.Entity === selectedCountry && d.Year == selectedYear);
-        const shareRow = allData.shareRenewables.find(d => d.Entity === selectedCountry && d.Year == selectedYear);
-        const windCapacityRow = allData.windCapacity.find(d => d.Entity === selectedCountry && d.Year == selectedYear);
-        
-        if (!prodRow || !shareRow) {
-            alert(`No se encontraron datos de producción para ${selectedCountry} en el año ${selectedYear}.`);
-            return;
-        }
-
-        // 1. Análisis del Mix Energético de la Región
-        const totalRenewableProd = (prodRow['Electricity from wind (TWh)'] || 0) +
-                                   (prodRow['Electricity from hydro (TWh)'] || 0) +
-                                   (prodRow['Electricity from solar (TWh)'] || 0) +
-                                   (prodRow['Other renewables including bioenergy (TWh)'] || 0);
-        
-        const renewableSharePercentage = shareRow['Renewables (% electricity)'];
-        const totalProduction = (totalRenewableProd * 100) / renewableSharePercentage;
-        const nonRenewableShare = 100 - renewableSharePercentage;
-
-        // Porcentajes de contribución de cada fuente renovable
-        const windShare = (prodRow['Electricity from wind (TWh)'] / totalProduction) * 100;
-        const hydroShare = (prodRow['Electricity from hydro (TWh)'] / totalProduction) * 100;
-        const solarShare = (prodRow['Electricity from solar (TWh)'] / totalProduction) * 100;
-        const otherShare = (prodRow['Other renewables including bioenergy (TWh)'] / totalProduction) * 100;
-
-        // 2. Proyección de Consumo Personal
-        const renewableConsumptionKWh = (userConsumption * renewableSharePercentage) / 100;
-        const nonRenewableConsumptionKWh = (userConsumption * nonRenewableShare) / 100;
-
-        const resultsDiv = document.getElementById('results');
-        const countryAnalysisDiv = document.getElementById('countryAnalysis');
-        const personalProjectionDiv = document.getElementById('personalProjection');
-        
-        // Formatear la salida del análisis del país
-        countryAnalysisDiv.innerHTML = `
-            <p><strong>Análisis de la producción eléctrica en ${selectedCountry} en ${selectedYear}:</strong></p>
-            <ul>
-                <li><strong>Energía Renovable Total:</strong> ${renewableSharePercentage.toFixed(2)}% del total.</li>
-                <li><strong>Energía No Renovable:</strong> ${nonRenewableShare.toFixed(2)}% del total.</li>
-            </ul>
-            <p><strong>Contribución de cada fuente renovable:</strong></p>
-            <ul>
-                <li>Eólica: ${windShare.toFixed(2)}%</li>
-                <li>Hidroeléctrica: ${hydroShare.toFixed(2)}%</li>
-                <li>Solar: ${solarShare.toFixed(2)}%</li>
-                <li>Otras (bioenergía, etc.): ${otherShare.toFixed(2)}%</li>
-            </ul>
-            ${windCapacityRow ? `<p><strong>Capacidad de Energía Eólica Instalada:</strong> ${parseFloat(windCapacityRow['Wind Capacity']).toFixed(2)} GW</p>` : ''}
-        `;
-
-        // Formatear la salida de la proyección personal
-        personalProjectionDiv.innerHTML = `
-            <p><strong>Proyección de tu consumo anual (${userConsumption.toFixed(2)} kWh):</strong></p>
-            <ul>
-                <li><strong>Consumo estimado de energía renovable:</strong> ${renewableConsumptionKWh.toFixed(2)} kWh</li>
-                <li><strong>Consumo estimado de energía no renovable:</strong> ${nonRenewableConsumptionKWh.toFixed(2)} kWh</li>
-            </ul>
-            <p>Con base en el mix energético de ${selectedCountry} en ${selectedYear}, aproximadamente el <strong>${renewableSharePercentage.toFixed(2)}%</strong> de tu consumo anual sería de fuentes renovables.</p>
-        `;
-        
-        resultsDiv.classList.remove('d-none');
+    if (isNaN(userConsumption) || userConsumption <= 0) {
+        alert('Por favor, ingresa un consumo eléctrico válido (un número mayor que cero).');
+        return;
     }
+
+    // Buscar los datos específicos para el país y el año seleccionados
+    const prodRow = allData.prod.find(d => d.Entity === selectedCountry && d.Year == selectedYear);
+    const shareRow = allData.shareRenewables.find(d => d.Entity === selectedCountry && d.Year == selectedYear);
+    const windCapacityRow = allData.windCapacity.find(d => d.Entity === selectedCountry && d.Year == selectedYear);
+    const hydroShareRow = allData.shareHydro.find(d => d.Entity === selectedCountry && d.Year == selectedYear);
+    
+    // Si no se encuentran datos, se detiene la ejecución y se muestra un error
+    if (!prodRow || !shareRow || !hydroShareRow) {
+        alert(`No se encontraron datos completos para ${selectedCountry} en el año ${selectedYear}. Por favor, selecciona otro país o año.`);
+        console.error(`Datos faltantes para ${selectedCountry} en ${selectedYear}. prodRow: ${!!prodRow}, shareRow: ${!!shareRow}, hydroShareRow: ${!!hydroShareRow}`);
+        return;
+    }
+
+    // 1. Análisis del Mix Energético de la Región
+    const totalRenewableProd = (prodRow['Electricity from wind (TWh)'] || 0) +
+                               (prodRow['Electricity from hydro (TWh)'] || 0) +
+                               (prodRow['Electricity from solar (TWh)'] || 0) +
+                               (prodRow['Other renewables including bioenergy (TWh)'] || 0);
+    
+    const renewableSharePercentage = shareRow['Renewables (% electricity)'];
+    const totalProduction = (totalRenewableProd * 100) / renewableSharePercentage;
+    const nonRenewableShare = 100 - renewableSharePercentage;
+
+    // Porcentajes de contribución de cada fuente renovable
+    const windShare = (prodRow['Electricity from wind (TWh)'] / totalProduction) * 100;
+    const hydroShare = (prodRow['Electricity from hydro (TWh)'] / totalProduction) * 100;
+    const solarShare = (prodRow['Electricity from solar (TWh)'] / totalProduction) * 100;
+    const otherShare = (prodRow['Other renewables including bioenergy (TWh)'] / totalProduction) * 100;
+
+    const hydroSharePercentageOfTotal = parseFloat(hydroShareRow['Hydro (% electricity)']);
+    
+    // 2. Proyección de Consumo Personal
+    const renewableConsumptionKWh = (userConsumption * renewableSharePercentage) / 100;
+    const nonRenewableConsumptionKWh = (userConsumption * nonRenewableShare) / 100;
+
+    // Verificación y depuración en consola
+    console.log(`País seleccionado: ${selectedCountry}, Año: ${selectedYear}`);
+    console.log(`Porcentaje de energía renovable para este país: ${renewableSharePercentage}%`);
+    console.log(`Porcentaje de energía hidroeléctrica para este país: ${hydroSharePercentageOfTotal}%`);
+
+    const resultsDiv = document.getElementById('results');
+    const countryAnalysisDiv = document.getElementById('countryAnalysis');
+    const personalProjectionDiv = document.getElementById('personalProjection');
+    
+    // Formatear la salida del análisis del país
+    countryAnalysisDiv.innerHTML = `
+        <p><strong>Análisis de la producción eléctrica en ${selectedCountry} en ${selectedYear}:</strong></p>
+        <ul>
+            <li><strong>Energía Renovable Total:</strong> ${renewableSharePercentage.toFixed(2)}% del total.</li>
+            <li><strong>Energía No Renovable:</strong> ${nonRenewableShare.toFixed(2)}% del total.</li>
+            <li><strong>Energía Hidroeléctrica (del total de electricidad):</strong> ${hydroSharePercentageOfTotal.toFixed(2)}%</li>
+        </ul>
+        <p><strong>Contribución de cada fuente renovable:</strong></p>
+        <ul>
+            <li>Eólica: ${windShare.toFixed(2)}%</li>
+            <li>Hidroeléctrica: ${hydroShare.toFixed(2)}%</li>
+            <li>Solar: ${solarShare.toFixed(2)}%</li>
+            <li>Otras (bioenergía, etc.): ${otherShare.toFixed(2)}%</li>
+        </ul>
+    `;
+
+    // Formatear la salida de la proyección personal
+    personalProjectionDiv.innerHTML = `
+        <p><strong>Proyección de tu consumo anual (${userConsumption.toFixed(2)} kWh):</strong></p>
+        <ul>
+            <li><strong>Consumo estimado de energía renovable:</strong> ${renewableConsumptionKWh.toFixed(2)} kWh</li>
+            <li><strong>Consumo estimado de energía no renovable:</strong> ${nonRenewableConsumptionKWh.toFixed(2)} kWh</li>
+        </ul>
+        <p>Con base en el mix energético de ${selectedCountry} en ${selectedYear}, el <strong>${renewableSharePercentage.toFixed(2)}%</strong> de tu consumo anual sería de fuentes renovables.</p>
+        <p>De tu consumo total, el <strong>${hydroSharePercentageOfTotal.toFixed(2)}%</strong> provendría de energía hidroeléctrica.</p>
+    `;
+    
+    resultsDiv.classList.remove('d-none');
+}
 </script>
 <footer class="footer">
     <div class="footer-content">
