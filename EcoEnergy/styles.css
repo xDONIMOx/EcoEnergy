@@ -1,4 +1,4 @@
-/* --- Variables de Color y Reseteo --- */
+/* --- 1. Variables Globales y Reseteo --- */
 :root {
     --main-bg: #f4f4fa;
     --sidebar-bg: #132c5e;
@@ -21,12 +21,17 @@ body {
     color: var(--text-dark);
 }
 
-/* --- Estructura Principal --- */
+hr {
+    border: none;
+    border-top: 1px solid #dde2ec;
+    margin: 2rem 0;
+}
+
+/* --- 2. Estructura Principal y Navegación --- */
 .container {
     position: relative;
 }
 
-/* --- Sidebar (Barra Lateral) --- */
 .sidebar {
     position: fixed;
     top: 0;
@@ -38,6 +43,7 @@ body {
     padding: 30px 20px;
     display: flex;
     flex-direction: column;
+    z-index: 1000;
 }
 
 .logo {
@@ -80,7 +86,6 @@ body {
     font-weight: 600;
 }
 
-/* --- Contenido Principal --- */
 .main {
     margin-left: 250px;
     padding: 40px;
@@ -101,7 +106,63 @@ body {
     line-height: 1.6;
 }
 
-/* --- Slider de la Página de Inicio --- */
+.content-section {
+    margin-bottom: 2rem;
+}
+
+/* --- 3. Componentes Reutilizables (Botones, Formularios, Tarjetas) --- */
+.card {
+    background-color: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card h4 {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    border: 2px solid #dde2ec;
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-control:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 5px rgba(100, 141, 179, 0.5);
+    outline: none;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #0c1a36;
+    border-color: #0c1a36;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+    color: #665008;
+}
+
+/* --- 4. Estilos Específicos por Página --- */
+
+/* Página de Inicio (index.html) */
 .hero-slider {
     position: relative;
     width: 100%;
@@ -151,9 +212,14 @@ body {
     font-weight: 300;
 }
 
-/* --- Sección de Datos Curiosos --- */
-.content-section {
-    margin-bottom: 2rem;
+.title {
+  text-align: center;
+}
+
+.parrafo {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .facts-section {
@@ -174,152 +240,7 @@ body {
     flex-wrap: wrap;
 }
 
-.card {
-    background-color: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    flex-basis: calc(33% - 1.5rem);
-    transition: transform 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.card h4 {
-    font-size: 1.2rem;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
-
-/* --- Estilos para la Página de Datos (Sin cambios) --- */
-.form-control {
-    border: 2px solid #dde2ec;
-    border-radius: 8px;
-    padding: 10px 15px;
-    font-family: 'Poppins', sans-serif;
-    transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-.form-control:focus {
-    border-color: var(--secondary-color);
-    box-shadow: 0 0 5px rgba(100, 141, 179, 0.5);
-    outline: none;
-}
-
-.table-responsive {
-    width: 100%;
-    overflow-x: auto;
-    border: 1px solid #dde2ec;
-    border-radius: 8px;
-    background-color: var(--card-bg);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table th, .table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #dde2ec;
-}
-
-.table thead th {
-    background-color: var(--sidebar-bg);
-    color: #ffffff;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.85em;
-}
-
-.table tbody td {
-    color: #333;
-}
-
-.table tbody tr:hover {
-    background-color: #f0f3f7;
-}
-
-.table tbody tr:nth-of-type(even) {
-    background-color: #f8f9fc;
-}
-
-.table tbody tr:nth-of-type(even):hover {
-    background-color: #e9eef5;
-}
-
-.title{
-  text-align: center;
-}
-.parrafo {
-  height: auto;
-  text-align: center;
-  justify-content:center;
-  align-items: center;
-
-}
-
-/* --- Diseño Responsive --- */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        height: auto;
-        padding: 1rem;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-    }
-
-    .logo {
-        margin-bottom: 0;
-        font-size: 1.5rem;
-    }
-
-    .nav {
-        display: none;
-    }
-
-    .main {
-        margin-left: 0;
-        width: 100%;
-        padding: 1rem;
-    }
-
-    .hero-slider {
-        height: 250px;
-    }
-
-    .slide-content {
-        padding: 1rem;
-    }
-
-    .slide-content h2 {
-        font-size: 1.5rem;
-    }
-
-    .slide-content p {
-        font-size: 1rem;
-    }
-
-    .cards-grid {
-        flex-direction: column;
-    }
-
-    .card {
-        flex-basis: 100%;
-    }
-}
-
-/* --- Estilos para la página de Hidroeléctrica --- */
-
-/* Sección de Cabecera */
+/* Página Hidroeléctrica (hidroelectrica.html) */
 .hero-section {
     position: relative;
     margin-bottom: 2rem;
@@ -332,14 +253,14 @@ body {
     width: 100%;
     height: 400px;
     object-fit: cover;
-    filter: brightness(60%); /* Oscurece la imagen para que el texto resalte */
+    filter: brightness(40%);
 }
-
-.nohero-image {
+.nohero-image{
     width: 100%;
     height: 400px;
     object-fit: cover;
-    filter: brightness(60%); /* Oscurece la imagen para que el texto resalte */
+    border-radius: 35px;
+
 }
 
 .hero-text {
@@ -361,10 +282,9 @@ body {
 
 .hero-text p {
     font-size: 1.2rem;
-    max-width: none; /* Elimina el límite de ancho para este párrafo */
+    max-width: none;
 }
 
-/* Sección de Diagrama */
 .diagram-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -374,15 +294,7 @@ body {
 }
 
 .diagram-step {
-    background-color: var(--card-bg);
     padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    transition: transform 0.3s ease;
-}
-
-.diagram-step:hover {
-    transform: translateY(-5px);
 }
 
 .step-number {
@@ -399,38 +311,12 @@ body {
     margin-bottom: 1rem;
 }
 
-.diagram-step h4 {
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
+.card-advantage h4 { color: #28a745; }
+.card-disadvantage h4 { color: #dc3545; }
+.card-advantage ul, .card-disadvantage ul { list-style-type: none; padding-left: 0; }
+.card-advantage li::before { content: '✅ '; }
+.card-disadvantage li::before { content: '❌ '; }
 
-/* Sección de Ventajas y Desventajas */
-.card-advantage, .card-disadvantage {
-    flex: 1; /* Ocupa el mismo espacio que la otra tarjeta */
-}
-
-.card-advantage h4 {
-    color: #28a745; /* Color para las ventajas */
-}
-
-.card-disadvantage h4 {
-    color: #dc3545; /* Color para las desventajas */
-}
-
-.card-advantage ul, .card-disadvantage ul {
-    list-style-type: none;
-    padding-left: 0;
-}
-
-.card-advantage li::before {
-    content: '✅ ';
-}
-
-.card-disadvantage li::before {
-    content: '❌ ';
-}
-
-/* Sección de Tipos de Centrales */
 .types-grid {
     display: flex;
     gap: 1.5rem;
@@ -439,20 +325,9 @@ body {
 }
 
 .type-card {
-    background-color: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
     flex-basis: calc(33% - 1.5rem);
-    transition: transform 0.3s ease;
 }
 
-.type-card h4 {
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
-
-/* Sección de Preguntas Frecuentes (Acordeón) */
 .accordion {
     max-width: 800px;
     margin: 2rem auto;
@@ -499,7 +374,7 @@ body {
 .accordion-content {
     padding: 0 1.5rem;
     background-color: #f8f9fc;
-    display: none; /* Oculto por defecto, se muestra con JavaScript */
+    display: none;
     transition: max-height 0.3s ease-out, padding 0.3s;
 }
 
@@ -508,92 +383,8 @@ body {
     margin: 0;
 }
 
-/* Responsive Design para la página de hidroeléctrica */
-@media (max-width: 768px) {
-    .hero-image {
-        height: 250px;
-    }
-    .hero-text h2 {
-        font-size: 2rem;
-    }
-    .hero-text p {
-        font-size: 1rem;
-    }
-    .diagram-grid {
-        grid-template-columns: 1fr;
-    }
-    .types-grid {
-        flex-direction: column;
-    }
-    .type-card {
-        flex-basis: 100%;
-    }
-}
 
-/* Estilos adicionales para la calculadora y el dashboard */
-
-.btn-primary {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    transition: background-color 0.3s;
-}
-
-.btn-primary:hover {
-    background-color: #0c1a36;
-    border-color: #0c1a36;
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    border-color: #ffecb5;
-    color: #665008;
-}
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-.chart-card {
-    background-color: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-}
-
-.chart-card h4 {
-    font-size: 1.2rem;
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-    text-align: center;
-}
-
-/* Responsive para los gráficos */
-@media (max-width: 768px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Estilo para el contenedor de la tabla con scroll */
-.scrollable-table-container {
-    max-height: 500px; /* Puedes ajustar esta altura según tus necesidades */
-    overflow-y: auto;
-    border: 1px solid #dde2ec;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-}
-
-/* Opcional: Asegura que el encabezado de la tabla no se mueva con el scroll */
-.scrollable-table-container thead th {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-/* --- Dashboard Filters --- */
-
+/* Páginas de Datos y Dashboard (datos.html, dashboard.html) */
 .dashboard-filters {
     display: flex;
     gap: 2rem;
@@ -605,64 +396,26 @@ body {
     flex-grow: 1;
 }
 
-/* Responsivo para los filtros */
-@media (max-width: 768px) {
-    .dashboard-filters {
-        flex-direction: column;
-        align-items: stretch;
-    }
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
 }
 
-/* Estilos para el botón responsivo y la barra lateral */
-.menu-toggle {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    font-size: 1.5rem;
-    cursor: pointer;
-    z-index: 1000;
-    display: none; /* Ocultar por defecto en pantallas grandes */
+.chart-card {
+    padding: 1.5rem;
 }
 
-@media (max-width: 768px) {
-    .container {
-        grid-template-columns: 1fr;
-    }
-    
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: -250px;
-        width: 250px;
-        height: 100%;
-        transition: left 0.3s ease;
-        z-index: 999;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-    }
-    
-    .main {
-        margin-left: 0;
-    }
-
-    .sidebar.active {
-        left: 0;
-    }
-    
-    .menu-toggle {
-        display: block; /* Mostrar el botón en pantallas pequeñas */
-    }
+.chart-card h4 {
+    font-size: 1.2rem;
+    text-align: center;
+    margin-bottom: 1rem;
 }
 
-/* Estilos para el mapa de calor */
+/* Mapa de Calor (datos.html) */
 .heatmap-box {
     height: 400px;
     width: 100%;
-    flex-direction: row;
     overflow: auto;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -670,18 +423,18 @@ body {
 
 .heatmap-table {
     width: auto;
-    min-width: 768px;
-    min-height: 768px;
     border-collapse: collapse;
     font-size: 10px;
     position: relative;
 }
+
 .heatmap-table th, .heatmap-table td {
     border: 1px solid #ddd;
     text-align: center;
     padding: 2px;
     white-space: nowrap;
 }
+
 .heatmap-table thead th {
     background-color: #f2f2f2;
     font-weight: 600;
@@ -689,21 +442,21 @@ body {
     top: 0;
     z-index: 10;
 }
+
 .heatmap-table .country-header {
     text-align: left;
-    background-color: #f8f8f8;
-    font-weight: 500;
     min-width: 100px;
 }
+
 .heatmap-table .year-header {
     min-width: 40px;
 }
+
 .heatmap-table .data-cell {
     width: 40px;
     height: 20px;
 }
 
-/* Columna de países fija */
 .heatmap-table .country-label {
     text-align: left;
     background-color: #f8f8f8;
@@ -714,11 +467,99 @@ body {
     z-index: 9;
 }
 
-/* Celda de la esquina superior izquierda fija (País) */
 .heatmap-table .corner-cell {
     position: sticky;
     top: 0;
     left: 0;
     z-index: 11;
     background-color: #f2f2f2;
+}
+
+
+/* --- 5. Diseño Responsive para Móviles --- */
+.menu-toggle {
+    display: none; /* Oculto por defecto en escritorio */
+}
+
+@media (max-width: 768px) {
+    .main {
+        margin-left: 0;
+        width: 100%;
+        padding: 2rem 1rem;
+    }
+
+    /* --- Configuración del menú deslizable --- */
+    .sidebar {
+        left: -250px; /* Oculto fuera de la pantalla */
+        transition: left 0.3s ease-in-out;
+        box-shadow: 4px 0px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar.active {
+        left: 0; /* Se muestra al activar */
+    }
+
+    .nav {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* --- Botón de Menú (Hamburguesa) --- */
+    .menu-toggle {
+        display: block; /* Hacemos visible el botón */
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        z-index: 1001; /* Encima del sidebar */
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    /* --- Ajustes de contenido para móvil --- */
+    .hero-image, .nohero-image { height: 250px; }
+    .hero-slider { height: 250px; }
+    .hero-text h2, .slide-content h2 { font-size: 1.8rem; }
+    .hero-text p, .slide-content p { font-size: 1rem; }
+    
+    .cards-grid, .types-grid, .dashboard-filters, .diagram-grid {
+        flex-direction: column;
+    }
+
+    .card, .type-card, .diagram-step {
+        flex-basis: 100%;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* --- Ajustes de organización para Dashboards en móvil --- */
+
+/* Añade espacio entre los filtros cuando se apilan */
+.dashboard-filters {
+    gap: 1.5rem; /* Aumenta el espacio entre los filtros */
+}
+
+/* Mejora la legibilidad de los títulos de los gráficos */
+.chart-card h4 {
+    font-size: 1.1rem; /* Ligeramente más pequeño para no desentonar */
+    line-height: 1.4; /* Mejora la altura de línea si el título ocupa dos líneas */
+}
+
+/* Centra el texto de ayuda debajo del título del gráfico */
+.chart-card .text-muted {
+    text-align: center;
+    padding: 0 1rem; /* Evita que el texto toque los bordes */
+}
+
+/* Asegura que el contenedor de los gráficos tenga un espacio superior */
+.dashboard-grid {
+    margin-top: 1rem;
+}
 }

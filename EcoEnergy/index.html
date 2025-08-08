@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
+    <button class="menu-toggle" aria-label="Abrir menú">☰</button>
     <div class="container">
         <aside class="sidebar">
             <h1 class="logo">💧 EcoEnergy</h1>
@@ -58,18 +59,6 @@
             </div>
         </main>
     </div>
-    
-    <script>
-    src="script.js"
-    document.addEventListener('DOMContentLoaded', () => {
-        const menuToggle = document.querySelector('.menu-toggle');
-        const sidebar = document.querySelector('.sidebar');
-        const main = document.querySelector('.main');
-
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-        });
-    });
-</script>
+    <script src="script.js"></script>
 </body>
 </html>

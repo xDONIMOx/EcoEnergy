@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
+<button class="menu-toggle" aria-label="Abrir menú">☰</button>
 <div class="container">
     <aside class="sidebar">
         <h1 class="logo">💧 EcoEnergy</h1>
@@ -339,86 +339,7 @@
     }
 </script>
 
-<style>
-/* Estilos para el mapa de calor */
-/* --- Estilos para el Mapa de Calor --- */
-
-/* * Contenedor principal que permite el scroll horizontal y vertical si la tabla es más grande.
- * Es crucial que este contenedor tenga un ancho del 100% y maneje el desbordamiento.
- */
-.heatmap-box {
-    height: 400px;
-    width: 100%;
-    overflow: auto;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    margin-top: 20px;
-}
-
-/* * La tabla del mapa de calor en sí.
- * La clave para la responsividad es ELIMINAR el "min-width: 768px;" que causa el desbordamiento.
- * Ahora la tabla se adaptará al ancho del contenedor.
- */
-.heatmap-table {
-    width: auto; /* Se ajusta automáticamente al contenido */
-    border-collapse: collapse;
-    font-size: 10px;
-    position: relative;
-    /* Las siguientes líneas causaban el problema de desbordamiento, por eso se deben eliminar o comentar: */
-    /* min-width: 768px; */ 
-    /* min-height: 768px; */
-}
-
-/* Estilos de las celdas y encabezados (se mantienen para la apariencia y usabilidad) */
-.heatmap-table th, .heatmap-table td {
-    border: 1px solid #ddd;
-    text-align: center;
-    padding: 2px;
-    white-space: nowrap; /* Evita que el texto de las celdas salte de línea */
-}
-.heatmap-table thead th {
-    background-color: #f2f2f2;
-    font-weight: 600;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-.heatmap-table .country-header {
-    text-align: left;
-    background-color: #f8f8f8;
-    font-weight: 500;
-    min-width: 100px;
-}
-.heatmap-table .year-header {
-    min-width: 40px;
-}
-.heatmap-table .data-cell {
-    /* El ancho de la celda es fijo, pero la tabla se desplaza si es muy grande */
-    width: 40px;
-    height: 20px;
-}
-
-/* Columna de países fija (sticky) para facilitar la navegación */
-.heatmap-table .country-label {
-    text-align: left;
-    background-color: #f8f8f8;
-    font-weight: 500;
-    min-width: 100px;
-    position: sticky;
-    left: 0;
-    z-index: 9;
-}
-
-/* Celda de la esquina superior izquierda (País/Año) fija */
-.heatmap-table .corner-cell {
-    position: sticky;
-    top: 0;
-    left: 0;
-    z-index: 11;
-    background-color: #f2f2f2;
-}
-
-</style>
+<script src="script.js"></script>
 
 </body>
 </html>
